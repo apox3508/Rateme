@@ -10,7 +10,11 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
 }
 
-export const hasFirebaseConfig = Object.values(firebaseConfig).every(Boolean)
+export const missingFirebaseKeys = Object.entries(firebaseConfig)
+  .filter(([, value]) => !value)
+  .map(([key]) => key)
+
+export const hasFirebaseConfig = missingFirebaseKeys.length === 0
 
 const app = hasFirebaseConfig ? initializeApp(firebaseConfig) : null
 

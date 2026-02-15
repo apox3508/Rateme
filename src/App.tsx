@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { collection, doc, onSnapshot, runTransaction } from 'firebase/firestore'
 import './App.css'
-import { db, hasFirebaseConfig } from './firebase'
+import { db, hasFirebaseConfig, missingFirebaseKeys } from './firebase'
 
 type Person = {
   id: number
@@ -79,7 +79,8 @@ function App() {
 
   useEffect(() => {
     if (!db || !hasFirebaseConfig) {
-      setSyncError('공유 모드가 비활성화됨: Firebase 환경변수를 설정하면 모두가 같은 점수를 보게 됩니다.')
+      const missingList = missingFirebaseKeys.join(', ')
+      setSyncError(`공유 모드 비활성화: Firebase 설정 누락 (${missingList})`)
       return
     }
     const firestore = db
