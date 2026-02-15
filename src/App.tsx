@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { collection, doc, onSnapshot, runTransaction } from 'firebase/firestore'
 import './App.css'
-import { db, hasFirebaseConfig, missingFirebaseKeys } from './firebase'
+import { hasSupabaseConfig, missingSupabaseKeys, supabase } from './supabase'
 
 type Person = {
   id: number
@@ -15,35 +14,30 @@ type Score = {
   count: number
 }
 
-const people: Person[] = [
-  {
-    id: 1,
-    name: 'Alex',
-    title: 'Street Portrait',
-    image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=900&q=80',
-  },
-  {
-    id: 2,
-    name: 'Mina',
-    title: 'Studio Light',
-    image: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=900&q=80',
-  },
-  {
-    id: 3,
-    name: 'Noah',
-    title: 'Casual Mood',
-    image: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&w=900&q=80',
-  },
-]
+type FaceRow = {
+  id: number
+  name: string
+  title: string | null
+  image_url: string
+}
 
-function buildInitialScores() {
-  return people.reduce<Record<number, Score>>((acc, person) => {
+type RatingRow = {
+  face_id: number
+  score: number
+}
+
+function buildInitialScores(faces: Person[]) {
+  return faces.reduce<Record<number, Score>>((acc, person) => {
     acc[person.id] = { total: 0, count: 0 }
     return acc
   }, {})
 }
 
-function pickRandomPersonId(excludeId?: number) {
+function pickRandomPersonId(people: Person[], excludeId?: number | null) {
+  if (people.length === 0) {
+    return null
+  }
+
   if (people.length === 1) {
     return people[0].id
   }
@@ -53,17 +47,42 @@ function pickRandomPersonId(excludeId?: number) {
   return candidates[randomIndex].id
 }
 
+function toPersonRows(rows: FaceRow[]): Person[] {
+  return rows.map((row) => ({
+    id: row.id,
+    name: row.name,
+    title: row.title ?? 'Untitled',
+    image: row.image_url,
+  }))
+}
+
+function aggregateScores(faces: Person[], ratings: RatingRow[]) {
+  const nextScores = buildInitialScores(faces)
+
+  ratings.forEach((rating) => {
+    if (!nextScores[rating.face_id]) {
+      return
+    }
+
+    nextScores[rating.face_id].total += Number(rating.score) || 0
+    nextScores[rating.face_id].count += 1
+  })
+
+  return nextScores
+}
+
 function App() {
-  const [currentId, setCurrentId] = useState(() => pickRandomPersonId())
-  const [scores, setScores] = useState<Record<number, Score>>(() => buildInitialScores())
+  const [people, setPeople] = useState<Person[]>([])
+  const [currentId, setCurrentId] = useState<number | null>(null)
+  const [scores, setScores] = useState<Record<number, Score>>({})
   const [hoverStars, setHoverStars] = useState(0)
   const [lastVote, setLastVote] = useState<{ rating: number; personName: string } | null>(null)
-  const [pendingWrites, setPendingWrites] = useState(0)
   const [syncError, setSyncError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [pendingWrites, setPendingWrites] = useState(0)
 
-  const currentPerson = people.find((person) => person.id === currentId) ?? people[0]
-  const currentScore = scores[currentId]
-
+  const currentPerson = people.find((person) => person.id === currentId) ?? null
+  const currentScore = currentPerson ? scores[currentPerson.id] ?? { total: 0, count: 0 } : { total: 0, count: 0 }
   const currentAverage = currentScore.count ? currentScore.total / currentScore.count : 0
 
   const overallStats = useMemo(() => {
@@ -78,93 +97,114 @@ function App() {
   }, [scores])
 
   useEffect(() => {
-    if (!db || !hasFirebaseConfig) {
-      const missingList = missingFirebaseKeys.join(', ')
-      setSyncError(`공유 모드 비활성화: Firebase 설정 누락 (${missingList})`)
+    if (!supabase || !hasSupabaseConfig) {
+      setSyncError(`Supabase 설정 누락: ${missingSupabaseKeys.join(', ')}`)
+      setIsLoading(false)
       return
     }
-    const firestore = db
+    const client = supabase
 
-    const unsubscribe = onSnapshot(
-      collection(firestore, 'ratings'),
-      (snapshot) => {
-        const nextScores = buildInitialScores()
+    let isCancelled = false
 
-        snapshot.forEach((entry) => {
-          const personId = Number(entry.id)
-          const data = entry.data() as { total?: unknown; count?: unknown }
+    const refreshFromDb = async () => {
+      const [facesResult, ratingsResult] = await Promise.all([
+        client.from('faces').select('id,name,title,image_url').eq('status', 'approved'),
+        client.from('ratings').select('face_id,score'),
+      ])
 
-          if (!Number.isFinite(personId) || !nextScores[personId]) {
-            return
-          }
+      if (isCancelled) {
+        return
+      }
 
-          nextScores[personId] = {
-            total: Number(data.total) || 0,
-            count: Number(data.count) || 0,
-          }
-        })
+      if (facesResult.error) {
+        setSyncError('faces 조회 실패: 테이블/정책을 확인해 주세요.')
+        setIsLoading(false)
+        return
+      }
 
-        setScores(nextScores)
-        setSyncError(null)
-      },
-      () => {
-        setSyncError('공유 점수를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
-      },
-    )
+      if (ratingsResult.error) {
+        setSyncError('ratings 조회 실패: 테이블/정책을 확인해 주세요.')
+        setIsLoading(false)
+        return
+      }
 
-    return () => unsubscribe()
+      const nextPeople = toPersonRows((facesResult.data ?? []) as FaceRow[])
+      const nextScores = aggregateScores(nextPeople, (ratingsResult.data ?? []) as RatingRow[])
+
+      setPeople(nextPeople)
+      setScores(nextScores)
+      setCurrentId((prev) => {
+        if (prev && nextPeople.some((person) => person.id === prev)) {
+          return prev
+        }
+        return pickRandomPersonId(nextPeople)
+      })
+      setSyncError(null)
+      setIsLoading(false)
+    }
+
+    void refreshFromDb()
+
+    const channel = client
+      .channel('rateme-sync')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'ratings' },
+        () => {
+          void refreshFromDb()
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'faces' },
+        () => {
+          void refreshFromDb()
+        },
+      )
+      .subscribe()
+
+    return () => {
+      isCancelled = true
+      void client.removeChannel(channel)
+    }
   }, [])
 
   const handleRating = async (rating: number) => {
-    const ratedPersonId = currentId
+    if (!supabase || !currentPerson) {
+      return
+    }
+    const client = supabase
+
     const ratedPerson = currentPerson
+    const ratedPersonId = currentPerson.id
+
+    setScores((prev) => ({
+      ...prev,
+      [ratedPersonId]: {
+        total: (prev[ratedPersonId]?.total ?? 0) + rating,
+        count: (prev[ratedPersonId]?.count ?? 0) + 1,
+      },
+    }))
 
     setLastVote({ rating, personName: ratedPerson.name })
     setHoverStars(0)
-    setCurrentId(pickRandomPersonId(ratedPersonId))
-
-    if (!db || !hasFirebaseConfig) {
-      setScores((prev) => ({
-        ...prev,
-        [ratedPersonId]: {
-          total: prev[ratedPersonId].total + rating,
-          count: prev[ratedPersonId].count + 1,
-        },
-      }))
-      return
-    }
-    const firestore = db
+    setCurrentId(pickRandomPersonId(people, ratedPersonId))
 
     setPendingWrites((prev) => prev + 1)
 
-    try {
-      await runTransaction(firestore, async (transaction) => {
-        const ratingRef = doc(firestore, 'ratings', String(ratedPersonId))
-        const ratingDoc = await transaction.get(ratingRef)
-        const data = ratingDoc.data() as { total?: unknown; count?: unknown } | undefined
+    const { error } = await client.from('ratings').insert({
+      face_id: ratedPersonId,
+      score: rating,
+    })
 
-        const previousTotal = Number(data?.total) || 0
-        const previousCount = Number(data?.count) || 0
+    setPendingWrites((prev) => Math.max(0, prev - 1))
 
-        transaction.set(
-          ratingRef,
-          {
-            name: ratedPerson.name,
-            title: ratedPerson.title,
-            total: previousTotal + rating,
-            count: previousCount + 1,
-          },
-          { merge: true },
-        )
-      })
-    } catch {
-      setSyncError('점수 저장에 실패했습니다. 네트워크 상태를 확인해 주세요.')
-    } finally {
-      setPendingWrites((prev) => Math.max(0, prev - 1))
+    if (error) {
+      setSyncError('점수 저장 실패: ratings INSERT 정책을 확인해 주세요.')
     }
   }
 
-  const syncLabel = !hasFirebaseConfig
+  const syncLabel = !hasSupabaseConfig
     ? '로컬 모드'
     : syncError
       ? '연결 오류'
@@ -176,41 +216,49 @@ function App() {
     <main className="app-shell">
       <p className="eyebrow">Rateme</p>
       <h1>랜덤 얼굴 평가</h1>
-      <p className="description">별점을 누르면 다음 랜덤 사진으로 넘어가고, 점수는 모두와 공유됩니다.</p>
+      <p className="description">별점을 누르면 다음 랜덤 사진으로 넘어가고, 점수는 모두에게 공유됩니다.</p>
       <p className={`sync-status ${syncError ? 'error' : ''}`}>{syncLabel}</p>
 
-      <section className="hero">
-        <img src={currentPerson.image} alt={`${currentPerson.name} portrait`} />
-        <div className="hero-overlay">
-          <p>{currentPerson.title}</p>
-          <h2>{currentPerson.name}</h2>
-        </div>
-      </section>
+      {isLoading && <p className="sync-error">데이터 불러오는 중...</p>}
 
-      <section className="score-box">
-        <p className="score-label">현재 인물 평균</p>
-        <p className="score-number">{currentAverage.toFixed(2)}</p>
-        <p className="score-sub">총 {currentScore.count}명 평가</p>
+      {!isLoading && !currentPerson && <p className="sync-error">approved 상태의 얼굴 데이터가 없습니다.</p>}
 
-        <div className="stars" onMouseLeave={() => setHoverStars(0)}>
-          {[1, 2, 3, 4, 5].map((star) => (
-            <button
-              key={star}
-              type="button"
-              className={`star ${hoverStars >= star ? 'filled' : ''}`}
-              onMouseEnter={() => setHoverStars(star)}
-              onClick={() => {
-                void handleRating(star)
-              }}
-              aria-label={`${star}점 주기`}
-            >
-              ★
-            </button>
-          ))}
-        </div>
+      {currentPerson && (
+        <>
+          <section className="hero">
+            <img src={currentPerson.image} alt={`${currentPerson.name} portrait`} />
+            <div className="hero-overlay">
+              <p>{currentPerson.title}</p>
+              <h2>{currentPerson.name}</h2>
+            </div>
+          </section>
 
-        <p className="hint">1점~5점 중 하나를 클릭하세요.</p>
-      </section>
+          <section className="score-box">
+            <p className="score-label">현재 인물 평균</p>
+            <p className="score-number">{currentAverage.toFixed(2)}</p>
+            <p className="score-sub">총 {currentScore.count}명 평가</p>
+
+            <div className="stars" onMouseLeave={() => setHoverStars(0)}>
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  className={`star ${hoverStars >= star ? 'filled' : ''}`}
+                  onMouseEnter={() => setHoverStars(star)}
+                  onClick={() => {
+                    void handleRating(star)
+                  }}
+                  aria-label={`${star}점 주기`}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+
+            <p className="hint">1점~5점 중 하나를 클릭하세요.</p>
+          </section>
+        </>
+      )}
 
       <section className="summary">
         <h3>전체 누적 통계</h3>
