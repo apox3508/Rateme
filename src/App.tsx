@@ -243,11 +243,6 @@ function App() {
     }
   }
 
-  const handleResetRatings = () => {
-    setRatedFaceIds([])
-    setCurrentId(pickRandomPersonId(people))
-  }
-
   const syncLabel = !hasSupabaseConfig
     ? '로컬 모드'
     : syncError
@@ -271,9 +266,6 @@ function App() {
         <section className="summary">
           <h3>평가 완료</h3>
           <p>현재 등록된 사진을 모두 평가했습니다.</p>
-          <button type="button" className="restart-btn" onClick={handleResetRatings}>
-            다시 평가하기
-          </button>
         </section>
       )}
 
