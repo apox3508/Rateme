@@ -26,6 +26,8 @@ type RatingRow = {
   score: number
 }
 
+const RATED_FACE_IDS_STORAGE_KEY = 'rateme_rated_face_ids'
+
 function buildInitialScores(faces: Person[]) {
   return faces.reduce<Record<number, Score>>((acc, person) => {
     acc[person.id] = { total: 0, count: 0 }
@@ -71,6 +73,24 @@ function aggregateScores(faces: Person[], ratings: RatingRow[]) {
   return nextScores
 }
 
+function loadRatedFaceIds() {
+  try {
+    const raw = localStorage.getItem(RATED_FACE_IDS_STORAGE_KEY)
+    if (!raw) {
+      return []
+    }
+
+    const parsed = JSON.parse(raw) as unknown
+    if (!Array.isArray(parsed)) {
+      return []
+    }
+
+    return parsed.filter((value): value is number => typeof value === 'number')
+  } catch {
+    return []
+  }
+}
+
 function App() {
   const [people, setPeople] = useState<Person[]>([])
   const [currentId, setCurrentId] = useState<number | null>(null)
@@ -80,8 +100,16 @@ function App() {
   const [syncError, setSyncError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [pendingWrites, setPendingWrites] = useState(0)
+  const [ratedFaceIds, setRatedFaceIds] = useState<number[]>(() => loadRatedFaceIds())
 
-  const currentPerson = people.find((person) => person.id === currentId) ?? null
+  const ratedFaceIdsSet = useMemo(() => new Set(ratedFaceIds), [ratedFaceIds])
+  const unratedPeople = useMemo(
+    () => people.filter((person) => !ratedFaceIdsSet.has(person.id)),
+    [people, ratedFaceIdsSet],
+  )
+  const isAllRated = !isLoading && people.length > 0 && unratedPeople.length === 0
+
+  const currentPerson = unratedPeople.find((person) => person.id === currentId) ?? null
   const currentScore = currentPerson ? scores[currentPerson.id] ?? { total: 0, count: 0 } : { total: 0, count: 0 }
   const currentAverage = currentScore.count ? currentScore.total / currentScore.count : 0
 
@@ -95,6 +123,21 @@ function App() {
       { total: 0, count: 0 },
     )
   }, [scores])
+
+  useEffect(() => {
+    localStorage.setItem(RATED_FACE_IDS_STORAGE_KEY, JSON.stringify(ratedFaceIds))
+  }, [ratedFaceIds])
+
+  useEffect(() => {
+    if (unratedPeople.length === 0) {
+      setCurrentId(null)
+      return
+    }
+
+    if (!currentId || !unratedPeople.some((person) => person.id === currentId)) {
+      setCurrentId(pickRandomPersonId(unratedPeople))
+    }
+  }, [unratedPeople, currentId])
 
   useEffect(() => {
     if (!supabase || !hasSupabaseConfig) {
@@ -133,12 +176,6 @@ function App() {
 
       setPeople(nextPeople)
       setScores(nextScores)
-      setCurrentId((prev) => {
-        if (prev && nextPeople.some((person) => person.id === prev)) {
-          return prev
-        }
-        return pickRandomPersonId(nextPeople)
-      })
       setSyncError(null)
       setIsLoading(false)
     }
@@ -177,6 +214,7 @@ function App() {
 
     const ratedPerson = currentPerson
     const ratedPersonId = currentPerson.id
+    const nextPeople = unratedPeople.filter((person) => person.id !== ratedPersonId)
 
     setScores((prev) => ({
       ...prev,
@@ -188,7 +226,8 @@ function App() {
 
     setLastVote({ rating, personName: ratedPerson.name })
     setHoverStars(0)
-    setCurrentId(pickRandomPersonId(people, ratedPersonId))
+    setRatedFaceIds((prev) => (prev.includes(ratedPersonId) ? prev : [...prev, ratedPersonId]))
+    setCurrentId(pickRandomPersonId(nextPeople))
 
     setPendingWrites((prev) => prev + 1)
 
@@ -202,6 +241,11 @@ function App() {
     if (error) {
       setSyncError('점수 저장 실패: ratings INSERT 정책을 확인해 주세요.')
     }
+  }
+
+  const handleResetRatings = () => {
+    setRatedFaceIds([])
+    setCurrentId(pickRandomPersonId(people))
   }
 
   const syncLabel = !hasSupabaseConfig
@@ -221,7 +265,17 @@ function App() {
 
       {isLoading && <p className="sync-error">데이터 불러오는 중...</p>}
 
-      {!isLoading && !currentPerson && <p className="sync-error">approved 상태의 얼굴 데이터가 없습니다.</p>}
+      {!isLoading && !currentPerson && !isAllRated && <p className="sync-error">approved 상태의 얼굴 데이터가 없습니다.</p>}
+
+      {isAllRated && (
+        <section className="summary">
+          <h3>평가 완료</h3>
+          <p>현재 등록된 사진을 모두 평가했습니다.</p>
+          <button type="button" className="restart-btn" onClick={handleResetRatings}>
+            다시 평가하기
+          </button>
+        </section>
+      )}
 
       {currentPerson && (
         <>
