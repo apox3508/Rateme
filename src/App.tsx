@@ -1,5 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { collection, doc, onSnapshot, runTransaction } from 'firebase/firestore'
 import './App.css'
+import { db, hasFirebaseConfig } from './firebase'
 
 type Person = {
   id: number
@@ -34,10 +36,12 @@ const people: Person[] = [
   },
 ]
 
-const initialScores = people.reduce<Record<number, Score>>((acc, person) => {
-  acc[person.id] = { total: 0, count: 0 }
-  return acc
-}, {})
+function buildInitialScores() {
+  return people.reduce<Record<number, Score>>((acc, person) => {
+    acc[person.id] = { total: 0, count: 0 }
+    return acc
+  }, {})
+}
 
 function pickRandomPersonId(excludeId?: number) {
   if (people.length === 1) {
@@ -51,9 +55,11 @@ function pickRandomPersonId(excludeId?: number) {
 
 function App() {
   const [currentId, setCurrentId] = useState(() => pickRandomPersonId())
-  const [scores, setScores] = useState<Record<number, Score>>(initialScores)
+  const [scores, setScores] = useState<Record<number, Score>>(() => buildInitialScores())
   const [hoverStars, setHoverStars] = useState(0)
   const [lastVote, setLastVote] = useState<{ rating: number; personName: string } | null>(null)
+  const [pendingWrites, setPendingWrites] = useState(0)
+  const [syncError, setSyncError] = useState<string | null>(null)
 
   const currentPerson = people.find((person) => person.id === currentId) ?? people[0]
   const currentScore = scores[currentId]
@@ -71,25 +77,106 @@ function App() {
     )
   }, [scores])
 
-  const handleRating = (rating: number) => {
-    setScores((prev) => ({
-      ...prev,
-      [currentId]: {
-        total: prev[currentId].total + rating,
-        count: prev[currentId].count + 1,
-      },
-    }))
+  useEffect(() => {
+    if (!db || !hasFirebaseConfig) {
+      setSyncError('공유 모드가 비활성화됨: Firebase 환경변수를 설정하면 모두가 같은 점수를 보게 됩니다.')
+      return
+    }
+    const firestore = db
 
-    setLastVote({ rating, personName: currentPerson.name })
+    const unsubscribe = onSnapshot(
+      collection(firestore, 'ratings'),
+      (snapshot) => {
+        const nextScores = buildInitialScores()
+
+        snapshot.forEach((entry) => {
+          const personId = Number(entry.id)
+          const data = entry.data() as { total?: unknown; count?: unknown }
+
+          if (!Number.isFinite(personId) || !nextScores[personId]) {
+            return
+          }
+
+          nextScores[personId] = {
+            total: Number(data.total) || 0,
+            count: Number(data.count) || 0,
+          }
+        })
+
+        setScores(nextScores)
+        setSyncError(null)
+      },
+      () => {
+        setSyncError('공유 점수를 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
+      },
+    )
+
+    return () => unsubscribe()
+  }, [])
+
+  const handleRating = async (rating: number) => {
+    const ratedPersonId = currentId
+    const ratedPerson = currentPerson
+
+    setLastVote({ rating, personName: ratedPerson.name })
     setHoverStars(0)
-    setCurrentId(pickRandomPersonId(currentId))
+    setCurrentId(pickRandomPersonId(ratedPersonId))
+
+    if (!db || !hasFirebaseConfig) {
+      setScores((prev) => ({
+        ...prev,
+        [ratedPersonId]: {
+          total: prev[ratedPersonId].total + rating,
+          count: prev[ratedPersonId].count + 1,
+        },
+      }))
+      return
+    }
+    const firestore = db
+
+    setPendingWrites((prev) => prev + 1)
+
+    try {
+      await runTransaction(firestore, async (transaction) => {
+        const ratingRef = doc(firestore, 'ratings', String(ratedPersonId))
+        const ratingDoc = await transaction.get(ratingRef)
+        const data = ratingDoc.data() as { total?: unknown; count?: unknown } | undefined
+
+        const previousTotal = Number(data?.total) || 0
+        const previousCount = Number(data?.count) || 0
+
+        transaction.set(
+          ratingRef,
+          {
+            name: ratedPerson.name,
+            title: ratedPerson.title,
+            total: previousTotal + rating,
+            count: previousCount + 1,
+          },
+          { merge: true },
+        )
+      })
+    } catch {
+      setSyncError('점수 저장에 실패했습니다. 네트워크 상태를 확인해 주세요.')
+    } finally {
+      setPendingWrites((prev) => Math.max(0, prev - 1))
+    }
   }
+
+  const syncLabel = !hasFirebaseConfig
+    ? '로컬 모드'
+    : syncError
+      ? '연결 오류'
+      : pendingWrites > 0
+        ? '저장 중'
+        : '공유 모드'
 
   return (
     <main className="app-shell">
       <p className="eyebrow">Rateme</p>
       <h1>랜덤 얼굴 평가</h1>
-      <p className="description">별점을 누르면 바로 다음 랜덤 사진으로 넘어갑니다.</p>
+      <p className="description">별점을 누르면 다음 랜덤 사진으로 넘어가고, 점수는 모두와 공유됩니다.</p>
+      <p className={`sync-status ${syncError ? 'error' : ''}`}>{syncLabel}</p>
 
       <section className="hero">
         <img src={currentPerson.image} alt={`${currentPerson.name} portrait`} />
@@ -109,9 +196,11 @@ function App() {
             <button
               key={star}
               type="button"
-              className={`star ${(hoverStars || 0) >= star ? 'filled' : ''}`}
+              className={`star ${hoverStars >= star ? 'filled' : ''}`}
               onMouseEnter={() => setHoverStars(star)}
-              onClick={() => handleRating(star)}
+              onClick={() => {
+                void handleRating(star)
+              }}
               aria-label={`${star}점 주기`}
             >
               ★
@@ -129,6 +218,7 @@ function App() {
         <p className="last-vote">
           {lastVote ? `최근 평가: ${lastVote.personName} ${lastVote.rating}점` : '아직 평가가 없습니다.'}
         </p>
+        {syncError && <p className="sync-error">{syncError}</p>}
       </section>
     </main>
   )

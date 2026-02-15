@@ -33,6 +33,22 @@ h1 {
   color: #334155;
 }
 
+.sync-status {
+  margin: 0;
+  width: fit-content;
+  border-radius: 999px;
+  padding: 0.2rem 0.65rem;
+  background: #dcfce7;
+  color: #166534;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.sync-status.error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
 .hero {
   position: relative;
   min-height: 430px;
@@ -131,6 +147,12 @@ h1 {
 .last-vote {
   margin-top: 0.5rem;
   font-weight: 600;
+}
+
+.sync-error {
+  margin-top: 0.5rem;
+  color: #b91c1c;
+  font-size: 0.9rem;
 }
 
 @media (max-width: 700px) {

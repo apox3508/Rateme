@@ -2,6 +2,21 @@
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
+## Rateme Shared Ratings Setup
+
+This app can share ratings across all users with Firebase Firestore.
+
+1. Copy `.env.example` to `.env`.
+2. Fill in your Firebase Web App config values.
+3. Create a Firestore database in your Firebase project.
+4. Use a `ratings` collection where each document ID is a person id (`1`, `2`, `3`), and each document stores:
+   - `total` (number)
+   - `count` (number)
+   - `name` (string, optional)
+   - `title` (string, optional)
+
+If Firebase environment variables are missing, the app falls back to local-only rating mode.
+
 Currently, two official plugins are available:
 
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
