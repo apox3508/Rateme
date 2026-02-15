@@ -39,16 +39,26 @@ const initialScores = people.reduce<Record<number, Score>>((acc, person) => {
   return acc
 }, {})
 
+function pickRandomPersonId(excludeId?: number) {
+  if (people.length === 1) {
+    return people[0].id
+  }
+
+  const candidates = excludeId ? people.filter((person) => person.id !== excludeId) : people
+  const randomIndex = Math.floor(Math.random() * candidates.length)
+  return candidates[randomIndex].id
+}
+
 function App() {
-  const [selectedId, setSelectedId] = useState(people[0].id)
+  const [currentId, setCurrentId] = useState(() => pickRandomPersonId())
   const [scores, setScores] = useState<Record<number, Score>>(initialScores)
   const [hoverStars, setHoverStars] = useState(0)
-  const [lastRating, setLastRating] = useState<number | null>(null)
+  const [lastVote, setLastVote] = useState<{ rating: number; personName: string } | null>(null)
 
-  const selectedPerson = people.find((person) => person.id === selectedId) ?? people[0]
-  const selectedScore = scores[selectedId]
+  const currentPerson = people.find((person) => person.id === currentId) ?? people[0]
+  const currentScore = scores[currentId]
 
-  const average = selectedScore.count === 0 ? 0 : selectedScore.total / selectedScore.count
+  const currentAverage = currentScore.count ? currentScore.total / currentScore.count : 0
 
   const overallStats = useMemo(() => {
     return Object.values(scores).reduce(
@@ -61,92 +71,64 @@ function App() {
     )
   }, [scores])
 
-  const handleRating = (value: number) => {
+  const handleRating = (rating: number) => {
     setScores((prev) => ({
       ...prev,
-      [selectedId]: {
-        total: prev[selectedId].total + value,
-        count: prev[selectedId].count + 1,
+      [currentId]: {
+        total: prev[currentId].total + rating,
+        count: prev[currentId].count + 1,
       },
     }))
-    setLastRating(value)
+
+    setLastVote({ rating, personName: currentPerson.name })
+    setHoverStars(0)
+    setCurrentId(pickRandomPersonId(currentId))
   }
 
   return (
     <main className="app-shell">
-      <section className="panel left-panel">
-        <p className="eyebrow">Rateme</p>
-        <h1>얼굴을 별점으로 평가해보세요</h1>
-        <p className="description">사람을 선택하고 별 1개부터 5개까지 클릭하면 바로 점수가 반영됩니다.</p>
+      <p className="eyebrow">Rateme</p>
+      <h1>랜덤 얼굴 평가</h1>
+      <p className="description">별점을 누르면 바로 다음 랜덤 사진으로 넘어갑니다.</p>
 
-        <div className="gallery">
-          {people.map((person) => {
-            const personScore = scores[person.id]
-            const personAverage = personScore.count === 0 ? '-' : (personScore.total / personScore.count).toFixed(1)
-
-            return (
-              <button
-                key={person.id}
-                className={`face-card ${selectedId === person.id ? 'active' : ''}`}
-                onClick={() => {
-                  setSelectedId(person.id)
-                  setLastRating(null)
-                }}
-                type="button"
-              >
-                <img src={person.image} alt={`${person.name} portrait`} loading="lazy" />
-                <div className="face-meta">
-                  <strong>{person.name}</strong>
-                  <span>{person.title}</span>
-                  <small>평균 {personAverage} / 5</small>
-                </div>
-              </button>
-            )
-          })}
+      <section className="hero">
+        <img src={currentPerson.image} alt={`${currentPerson.name} portrait`} />
+        <div className="hero-overlay">
+          <p>{currentPerson.title}</p>
+          <h2>{currentPerson.name}</h2>
         </div>
       </section>
 
-      <section className="panel right-panel">
-        <div className="hero">
-          <img src={selectedPerson.image} alt={`${selectedPerson.name} large portrait`} />
-          <div className="hero-overlay">
-            <p>{selectedPerson.title}</p>
-            <h2>{selectedPerson.name}</h2>
-          </div>
+      <section className="score-box">
+        <p className="score-label">현재 인물 평균</p>
+        <p className="score-number">{currentAverage.toFixed(2)}</p>
+        <p className="score-sub">총 {currentScore.count}명 평가</p>
+
+        <div className="stars" onMouseLeave={() => setHoverStars(0)}>
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              key={star}
+              type="button"
+              className={`star ${(hoverStars || 0) >= star ? 'filled' : ''}`}
+              onMouseEnter={() => setHoverStars(star)}
+              onClick={() => handleRating(star)}
+              aria-label={`${star}점 주기`}
+            >
+              ★
+            </button>
+          ))}
         </div>
 
-        <div className="score-box">
-          <p className="score-label">현재 평균</p>
-          <p className="score-number">{average.toFixed(2)}</p>
-          <p className="score-sub">총 {selectedScore.count}명 평가</p>
+        <p className="hint">1점~5점 중 하나를 클릭하세요.</p>
+      </section>
 
-          <div className="stars" onMouseLeave={() => setHoverStars(0)}>
-            {[1, 2, 3, 4, 5].map((star) => {
-              const filled = (hoverStars || lastRating || 0) >= star
-
-              return (
-                <button
-                  key={star}
-                  type="button"
-                  className={`star ${filled ? 'filled' : ''}`}
-                  onMouseEnter={() => setHoverStars(star)}
-                  onClick={() => handleRating(star)}
-                  aria-label={`${star}점 주기`}
-                >
-                  ★
-                </button>
-              )
-            })}
-          </div>
-
-          <p className="hint">별을 누르면 바로 반영됩니다 (1점 ~ 5점).</p>
-        </div>
-
-        <div className="summary">
-          <h3>전체 누적 통계</h3>
-          <p>총 평점 수: {overallStats.count}</p>
-          <p>전체 평균: {overallStats.count ? (overallStats.total / overallStats.count).toFixed(2) : '0.00'}</p>
-        </div>
+      <section className="summary">
+        <h3>전체 누적 통계</h3>
+        <p>총 평점 수: {overallStats.count}</p>
+        <p>전체 평균: {overallStats.count ? (overallStats.total / overallStats.count).toFixed(2) : '0.00'}</p>
+        <p className="last-vote">
+          {lastVote ? `최근 평가: ${lastVote.personName} ${lastVote.rating}점` : '아직 평가가 없습니다.'}
+        </p>
       </section>
     </main>
   )
