@@ -254,7 +254,7 @@ function App() {
   return (
     <main className="app-shell">
       <p className="eyebrow">RATEME</p>
-      <p className="description">별점을 누르면 다음 랜덤 사진으로 넘어가고, 점수는 모두에게 공유됩니다.</p>
+      <p className="description">별점을 누르는 순간, 다음 랜덤 사진으로 바로 넘어갑니다. 당신의 점수는 실시간으로 모두에게 공유됩니다.</p>
       {syncLabel && <p className={`sync-status ${syncError ? 'error' : ''}`}>{syncLabel}</p>}
 
       {isLoading && <p className="sync-error">데이터 불러오는 중...</p>}
