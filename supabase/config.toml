@@ -1,0 +1,4 @@
+project_id = "rrwkafhcgefvtlvsayou"
+
+[functions.imagekit-webhook]
+verify_jwt = false

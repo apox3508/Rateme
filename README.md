@@ -33,7 +33,7 @@ When you upload an image to ImageKit, you can auto-create a `faces` row.
 ### 1) Deploy the Edge Function
 
 ```bash
-supabase functions deploy imagekit-webhook
+supabase functions deploy imagekit-webhook --no-verify-jwt
 ```
 
 Set required secrets:
