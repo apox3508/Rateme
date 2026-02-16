@@ -27,6 +27,8 @@ type RatingRow = {
 }
 
 const RATED_FACE_IDS_STORAGE_KEY = 'rateme_rated_face_ids'
+const REFERENCE_STAR_URL =
+  'https://ik.imagekit.io/rat3me/New%20Folder/pngtree-three-dimensional-golden-star-with-sharp-points-and-a-smooth-surface-png-image_16474576.png'
 
 function buildInitialScores(faces: Person[]) {
   return faces.reduce<Record<number, Score>>((acc, person) => {
@@ -92,49 +94,11 @@ function loadRatedFaceIds() {
 }
 
 function ScoreStar({ filled, index }: { filled: boolean; index: number }) {
-  const goldBodyId = `score-star-gold-body-${index}`
-  const goldHighlightId = `score-star-gold-highlight-${index}`
-  const depthShadowId = `score-star-depth-shadow-${index}`
-  const starPath = 'M12 1.05l2.62 6.8 7.22.58-5.5 4.7 1.74 7.07L12 16.52 5.92 20.2l1.74-7.07-5.5-4.7 7.22-.58L12 1.05z'
-
   return (
-    <svg className="score-star-icon" viewBox="0 0 24 24" aria-hidden="true">
-      <defs>
-        <linearGradient id={goldBodyId} x1="8%" y1="4%" x2="92%" y2="100%">
-          <stop offset="0%" stopColor="#fffde8" />
-          <stop offset="26%" stopColor="#fde68a" />
-          <stop offset="52%" stopColor="#facc15" />
-          <stop offset="78%" stopColor="#f59e0b" />
-          <stop offset="100%" stopColor="#a16207" />
-        </linearGradient>
-        <radialGradient id={goldHighlightId} cx="36%" cy="24%" r="64%">
-          <stop offset="0%" stopColor="rgba(255,255,255,0.88)" />
-          <stop offset="32%" stopColor="rgba(255,255,255,0.32)" />
-          <stop offset="100%" stopColor="rgba(255,255,255,0)" />
-        </radialGradient>
-        <filter id={depthShadowId} x="-45%" y="-45%" width="190%" height="190%">
-          <feDropShadow dx="0" dy="1.2" stdDeviation="0.75" floodColor="#ffffff" floodOpacity="0.42" />
-          <feDropShadow dx="0" dy="2.4" stdDeviation="1.0" floodColor="#92400e" floodOpacity="0.36" />
-          <feDropShadow dx="0" dy="5.1" stdDeviation="1.85" floodColor="#b45309" floodOpacity="0.28" />
-        </filter>
-      </defs>
-      {filled ? (
-        <>
-          <path d={starPath} fill="#78350f" opacity="0.44" transform="translate(0 0.72) scale(1.012)" />
-          <path d={starPath} fill={`url(#${goldBodyId})`} stroke="#9a3412" strokeWidth="0.88" filter={`url(#${depthShadowId})`} />
-          <path d={starPath} fill={`url(#${goldHighlightId})`} transform="translate(-0.05 -0.2) scale(0.982)" />
-          <path d="M12 2.35l1.52 3.86h-3.04L12 2.35z" fill="rgba(255,255,255,0.52)" />
-          <path d={starPath} fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="0.34" transform="translate(-0.05 -0.2) scale(0.97)" />
-        </>
-      ) : (
-        <path
-          d={starPath}
-          fill="#dee6f1"
-          stroke="#afbccf"
-          strokeWidth="0.85"
-        />
-      )}
-    </svg>
+    <span className={`score-star-figure ${filled ? 'filled' : 'empty'}`}>
+      <img className="score-star-icon-image" src={REFERENCE_STAR_URL} alt="" loading="lazy" decoding="async" />
+      <span className="sr-only">{`현재 점수 별 ${index}`}</span>
+    </span>
   )
 }
 

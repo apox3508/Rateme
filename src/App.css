@@ -115,10 +115,10 @@ h1 {
 .score-number {
   margin: 0.2rem 0 0;
   display: flex;
-  gap: 0.28rem;
+  gap: 0.24rem;
   align-items: center;
   width: fit-content;
-  padding: 0.26rem 0.34rem 0.22rem;
+  padding: 0.18rem 0.24rem 0.14rem;
   border-radius: 14px;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0.76), rgba(255, 255, 255, 0.45));
   border: 1px solid rgba(251, 191, 36, 0.26);
@@ -131,6 +131,47 @@ h1 {
   width: clamp(2.15rem, 5.9vw, 2.82rem);
   height: clamp(2.15rem, 5.9vw, 2.82rem);
   display: block;
+}
+
+.score-star-figure {
+  width: clamp(1.55rem, 4.4vw, 2rem);
+  height: clamp(1.55rem, 4.4vw, 2rem);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.score-star-icon-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.score-star-figure.filled .score-star-icon-image {
+  opacity: 1;
+  filter:
+    saturate(1.06)
+    contrast(1.03)
+    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.36))
+    drop-shadow(0 4px 8px rgba(180, 83, 9, 0.26));
+}
+
+.score-star-figure.empty .score-star-icon-image {
+  opacity: 0.32;
+  filter: grayscale(1) saturate(0) brightness(1.1);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .score-sub,
