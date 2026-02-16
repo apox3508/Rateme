@@ -92,44 +92,39 @@ function loadRatedFaceIds() {
 }
 
 function ScoreStar({ filled, index }: { filled: boolean; index: number }) {
-  const baseGoldId = `score-star-base-gold-${index}`
-  const shineId = `score-star-shine-${index}`
-  const rimId = `score-star-rim-${index}`
-  const shadowId = `score-star-depth-${index}`
-  const starPath = 'M12 0.9l2.48 6.52 7.22.64-5.5 4.72 1.72 7.12L12 16.3l-6.2 3.69 1.72-7.12-5.5-4.72 7.22-.64L12 0.9z'
+  const goldBodyId = `score-star-gold-body-${index}`
+  const goldHighlightId = `score-star-gold-highlight-${index}`
+  const depthShadowId = `score-star-depth-shadow-${index}`
+  const starPath = 'M12 1.05l2.62 6.8 7.22.58-5.5 4.7 1.74 7.07L12 16.52 5.92 20.2l1.74-7.07-5.5-4.7 7.22-.58L12 1.05z'
 
   return (
     <svg className="score-star-icon" viewBox="0 0 24 24" aria-hidden="true">
       <defs>
-        <linearGradient id={baseGoldId} x1="8%" y1="0%" x2="92%" y2="100%">
-          <stop offset="0%" stopColor="#fffce8" />
-          <stop offset="24%" stopColor="#fde68a" />
-          <stop offset="54%" stopColor="#facc15" />
-          <stop offset="80%" stopColor="#f59e0b" />
-          <stop offset="100%" stopColor="#92400e" />
+        <linearGradient id={goldBodyId} x1="8%" y1="4%" x2="92%" y2="100%">
+          <stop offset="0%" stopColor="#fffde8" />
+          <stop offset="26%" stopColor="#fde68a" />
+          <stop offset="52%" stopColor="#facc15" />
+          <stop offset="78%" stopColor="#f59e0b" />
+          <stop offset="100%" stopColor="#a16207" />
         </linearGradient>
-        <radialGradient id={shineId} cx="33%" cy="24%" r="68%">
-          <stop offset="0%" stopColor="rgba(255,255,255,0.86)" />
-          <stop offset="34%" stopColor="rgba(255,255,255,0.28)" />
+        <radialGradient id={goldHighlightId} cx="36%" cy="24%" r="64%">
+          <stop offset="0%" stopColor="rgba(255,255,255,0.88)" />
+          <stop offset="32%" stopColor="rgba(255,255,255,0.32)" />
           <stop offset="100%" stopColor="rgba(255,255,255,0)" />
         </radialGradient>
-        <linearGradient id={rimId} x1="50%" y1="65%" x2="50%" y2="100%">
-          <stop offset="0%" stopColor="rgba(146,64,14,0)" />
-          <stop offset="100%" stopColor="rgba(120,53,15,0.42)" />
-        </linearGradient>
-        <filter id={shadowId} x="-45%" y="-45%" width="190%" height="190%">
-          <feDropShadow dx="0" dy="1.0" stdDeviation="0.65" floodColor="#ffffff" floodOpacity="0.42" />
-          <feDropShadow dx="0" dy="2.2" stdDeviation="0.9" floodColor="#7c2d12" floodOpacity="0.38" />
-          <feDropShadow dx="0" dy="4.8" stdDeviation="1.65" floodColor="#b45309" floodOpacity="0.3" />
+        <filter id={depthShadowId} x="-45%" y="-45%" width="190%" height="190%">
+          <feDropShadow dx="0" dy="1.2" stdDeviation="0.75" floodColor="#ffffff" floodOpacity="0.42" />
+          <feDropShadow dx="0" dy="2.4" stdDeviation="1.0" floodColor="#92400e" floodOpacity="0.36" />
+          <feDropShadow dx="0" dy="5.1" stdDeviation="1.85" floodColor="#b45309" floodOpacity="0.28" />
         </filter>
       </defs>
       {filled ? (
         <>
-          <path d={starPath} fill="#7c2d12" opacity="0.52" transform="translate(0 0.84) scale(1.015)" />
-          <path d={starPath} fill={`url(#${baseGoldId})`} stroke="#9a3412" strokeWidth="0.9" filter={`url(#${shadowId})`} />
-          <path d={starPath} fill={`url(#${shineId})`} transform="translate(-0.03 -0.16)" />
-          <path d={starPath} fill={`url(#${rimId})`} />
-          <path d={starPath} fill="none" stroke="rgba(255,255,255,0.38)" strokeWidth="0.34" transform="translate(-0.04 -0.16) scale(0.972)" />
+          <path d={starPath} fill="#78350f" opacity="0.44" transform="translate(0 0.72) scale(1.012)" />
+          <path d={starPath} fill={`url(#${goldBodyId})`} stroke="#9a3412" strokeWidth="0.88" filter={`url(#${depthShadowId})`} />
+          <path d={starPath} fill={`url(#${goldHighlightId})`} transform="translate(-0.05 -0.2) scale(0.982)" />
+          <path d="M12 2.35l1.52 3.86h-3.04L12 2.35z" fill="rgba(255,255,255,0.52)" />
+          <path d={starPath} fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="0.34" transform="translate(-0.05 -0.2) scale(0.97)" />
         </>
       ) : (
         <path
