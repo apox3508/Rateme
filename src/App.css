@@ -16,7 +16,8 @@
   margin: 0;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  font-size: 0.75rem;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+  line-height: 1.1;
   color: #b91c1c;
   font-weight: 700;
 }
