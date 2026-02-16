@@ -93,10 +93,13 @@ function loadRatedFaceIds() {
   }
 }
 
-function ScoreStar({ filled, index }: { filled: boolean; index: number }) {
+function ScoreStar({ fillRatio, index }: { fillRatio: number; index: number }) {
   return (
-    <span className={`score-star-figure ${filled ? 'filled' : 'empty'}`}>
-      <img className="score-star-icon-image" src={REFERENCE_STAR_URL} alt="" loading="lazy" decoding="async" />
+    <span className="score-star-figure">
+      <img className="score-star-icon-image empty" src={REFERENCE_STAR_URL} alt="" loading="lazy" decoding="async" />
+      <span className="score-star-fill" style={{ width: `${Math.round(fillRatio * 100)}%` }}>
+        <img className="score-star-icon-image filled" src={REFERENCE_STAR_URL} alt="" loading="lazy" decoding="async" />
+      </span>
       <span className="sr-only">{`현재 점수 별 ${index}`}</span>
     </span>
   )
@@ -123,7 +126,6 @@ function App() {
   const currentPerson = unratedPeople.find((person) => person.id === currentId) ?? null
   const currentScore = currentPerson ? scores[currentPerson.id] ?? { total: 0, count: 0 } : { total: 0, count: 0 }
   const currentAverage = currentScore.count ? currentScore.total / currentScore.count : 0
-  const currentAverageStars = Math.max(0, Math.min(5, Math.round(currentAverage)))
 
   useEffect(() => {
     localStorage.setItem(RATED_FACE_IDS_STORAGE_KEY, JSON.stringify(ratedFaceIds))
@@ -283,7 +285,11 @@ function App() {
             <p className="score-label">현재 점수</p>
             <p className="score-number" aria-label={`현재 평균 ${currentAverage.toFixed(2)}점`}>
               {[1, 2, 3, 4, 5].map((star) => (
-                <ScoreStar key={star} index={star} filled={star <= currentAverageStars} />
+                <ScoreStar
+                  key={star}
+                  index={star}
+                  fillRatio={Math.max(0, Math.min(1, currentAverage - (star - 1)))}
+                />
               ))}
             </p>
             <p className="score-sub">총 {currentScore.count}명 평가</p>

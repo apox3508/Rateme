@@ -134,6 +134,7 @@ h1 {
 }
 
 .score-star-figure {
+  position: relative;
   width: clamp(1.55rem, 4.4vw, 2rem);
   height: clamp(1.55rem, 4.4vw, 2rem);
   display: inline-flex;
@@ -142,13 +143,15 @@ h1 {
 }
 
 .score-star-icon-image {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
   object-fit: contain;
   display: block;
 }
 
-.score-star-figure.filled .score-star-icon-image {
+.score-star-icon-image.filled {
   opacity: 1;
   filter:
     saturate(1.06)
@@ -157,9 +160,16 @@ h1 {
     drop-shadow(0 4px 8px rgba(180, 83, 9, 0.26));
 }
 
-.score-star-figure.empty .score-star-icon-image {
+.score-star-icon-image.empty {
   opacity: 0.32;
   filter: grayscale(1) saturate(0) brightness(1.1);
+}
+
+.score-star-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  height: 100%;
+  overflow: hidden;
 }
 
 .sr-only {
