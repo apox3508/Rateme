@@ -293,7 +293,7 @@ async function fetchWikiTitle(name: string) {
     }
   }
 
-  return 'Public Figure'
+  return 'Celebrity'
 }
 
 function jsonResponse(status: number, body: Record<string, unknown>) {
