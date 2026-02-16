@@ -92,59 +92,37 @@ function loadRatedFaceIds() {
 }
 
 function ScoreStar({ filled, index }: { filled: boolean; index: number }) {
-  const baseGoldId = `score-star-gold-base-${index}`
-  const shineId = `score-star-gold-shine-${index}`
-  const shadowId = `score-star-gold-depth-${index}`
-  const starPath = 'M12 1.2l2.64 7.1h7.56l-6.12 4.45 2.34 7.24L12 15.58l-6.46 4.41 2.34-7.24L1.76 8.3h7.58L12 1.2z'
+  const baseGoldId = `score-star-base-gold-${index}`
+  const shadowId = `score-star-depth-${index}`
+  const starPath = 'M12 1.4l2.9 6.4 7.1.8-5.3 4.7 1.5 7.1-6.2-3.5-6.2 3.5 1.5-7.1-5.3-4.7 7.1-.8L12 1.4z'
 
   return (
     <svg className="score-star-icon" viewBox="0 0 24 24" aria-hidden="true">
       <defs>
         <linearGradient id={baseGoldId} x1="8%" y1="0%" x2="92%" y2="100%">
           <stop offset="0%" stopColor="#fffce8" />
-          <stop offset="22%" stopColor="#fee58a" />
-          <stop offset="48%" stopColor="#facc15" />
-          <stop offset="74%" stopColor="#f59e0b" />
+          <stop offset="24%" stopColor="#fde68a" />
+          <stop offset="54%" stopColor="#facc15" />
+          <stop offset="80%" stopColor="#f59e0b" />
           <stop offset="100%" stopColor="#92400e" />
         </linearGradient>
-        <radialGradient id={shineId} cx="34%" cy="22%" r="68%">
-          <stop offset="0%" stopColor="rgba(255,255,255,0.78)" />
-          <stop offset="36%" stopColor="rgba(255,255,255,0.26)" />
-          <stop offset="100%" stopColor="rgba(255,255,255,0)" />
-        </radialGradient>
         <filter id={shadowId} x="-45%" y="-45%" width="190%" height="190%">
-          <feDropShadow dx="0" dy="1.2" stdDeviation="0.7" floodColor="#ffffff" floodOpacity="0.48" />
-          <feDropShadow dx="0" dy="2.6" stdDeviation="1.1" floodColor="#78350f" floodOpacity="0.46" />
-          <feDropShadow dx="0" dy="5.8" stdDeviation="2.0" floodColor="#b45309" floodOpacity="0.34" />
+          <feDropShadow dx="0" dy="1.1" stdDeviation="0.7" floodColor="#ffffff" floodOpacity="0.42" />
+          <feDropShadow dx="0" dy="2.5" stdDeviation="1.05" floodColor="#7c2d12" floodOpacity="0.5" />
+          <feDropShadow dx="0" dy="5.4" stdDeviation="1.8" floodColor="#b45309" floodOpacity="0.36" />
         </filter>
       </defs>
       {filled ? (
         <>
-          <path
-            d={starPath}
-            fill="#7c2d12"
-            opacity="0.58"
-            transform="translate(0 0.7)"
-          />
-          <path
-            d={starPath}
-            fill={`url(#${baseGoldId})`}
-            stroke="#9a3412"
-            strokeWidth="0.85"
-            filter={`url(#${shadowId})`}
-          />
-          <path
-            d={starPath}
-            fill={`url(#${shineId})`}
-            transform="translate(-0.04 -0.15)"
-          />
-          <path
-            d={starPath}
-            fill="none"
-            stroke="rgba(255,255,255,0.42)"
-            strokeWidth="0.38"
-            transform="translate(-0.08 -0.24) scale(0.96)"
-          />
+          <path d={starPath} fill="#7c2d12" opacity="0.56" transform="translate(0 0.68)" />
+          <path d={starPath} fill={`url(#${baseGoldId})`} stroke="#9a3412" strokeWidth="0.82" filter={`url(#${shadowId})`} />
+          <path d="M12 2.6l1.65 4.85h-3.3L12 2.6z" fill="rgba(255,255,255,0.45)" />
+          <path d="M13.65 7.45l5.9.66-4.25 3.78-1.65-4.44z" fill="rgba(255,255,255,0.24)" />
+          <path d="M15.3 11.89l1.25 5.93-3.75-2.08 2.5-3.85z" fill="rgba(120,53,15,0.2)" />
+          <path d="M11.2 15.74L7.45 17.82l1.25-5.93 2.5 3.85z" fill="rgba(120,53,15,0.2)" />
+          <path d="M8.7 11.89L4.45 8.11l5.9-.66-1.65 4.44z" fill="rgba(255,255,255,0.2)" />
+          <path d="M12 8.55l2.45 1.78-.94 2.95h-3.02l-.94-2.95L12 8.55z" fill="rgba(255,255,255,0.3)" />
+          <path d={starPath} fill="none" stroke="rgba(255,255,255,0.36)" strokeWidth="0.34" transform="translate(-0.05 -0.18) scale(0.97)" />
         </>
       ) : (
         <path
