@@ -95,7 +95,7 @@ function ScoreStar({ filled, index }: { filled: boolean; index: number }) {
   const baseGoldId = `score-star-gold-base-${index}`
   const shineId = `score-star-gold-shine-${index}`
   const shadowId = `score-star-gold-depth-${index}`
-  const starPath = 'M12 1.15l3.12 6.42 7.08 1.03-5.12 4.98 1.21 7.04L12 17.32 5.71 20.62l1.2-7.04L1.8 8.6l7.08-1.03L12 1.15z'
+  const starPath = 'M12 1.2l2.64 7.1h7.56l-6.12 4.45 2.34 7.24L12 15.58l-6.46 4.41 2.34-7.24L1.76 8.3h7.58L12 1.2z'
 
   return (
     <svg className="score-star-icon" viewBox="0 0 24 24" aria-hidden="true">
