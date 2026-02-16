@@ -63,6 +63,32 @@ In ImageKit Dashboard:
    `upload.pre-transform.success`
 4. Copy webhook secret and set it as `IMAGEKIT_WEBHOOK_SECRET` in Supabase.
 
+### 2-1) Add Pull Sync Function (recommended for manual uploads)
+
+Deploy:
+
+```bash
+supabase functions deploy imagekit-sync --no-verify-jwt
+```
+
+Set secrets:
+
+```bash
+supabase secrets set \
+  IMAGEKIT_PRIVATE_KEY=<imagekit-private-key> \
+  IMAGEKIT_FOLDER=/rateme \
+  IMAGEKIT_SYNC_LIMIT=100 \
+  IMAGEKIT_SYNC_TOKEN=<random-long-token>
+```
+
+Run sync (manual trigger):
+
+```bash
+curl -X POST "https://<project-ref>.functions.supabase.co/imagekit-sync?limit=100&token=<sync-token>"
+```
+
+This sync reads files from ImageKit and upserts `faces` rows by `image_url`.
+
 ### 3) Required DB columns
 
 Your `public.faces` table must have:

@@ -2,3 +2,6 @@ project_id = "rrwkafhcgefvtlvsayou"
 
 [functions.imagekit-webhook]
 verify_jwt = false
+
+[functions.imagekit-sync]
+verify_jwt = false
