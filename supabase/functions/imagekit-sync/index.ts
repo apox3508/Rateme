@@ -21,6 +21,15 @@ type FacesInsert = {
   status: 'approved'
 }
 
+function toBase64Utf8(input: string) {
+  const bytes = new TextEncoder().encode(input)
+  let binary = ''
+  for (const byte of bytes) {
+    binary += String.fromCharCode(byte)
+  }
+  return btoa(binary)
+}
+
 function normalizeName(fileName: string) {
   const noExt = fileName.replace(/\.[^/.]+$/, '')
   const decoded = decodeURIComponent(noExt)
@@ -141,7 +150,7 @@ async function fetchImageKitFiles(limit: number) {
     url.searchParams.set('path', IMAGEKIT_FOLDER)
   }
 
-  const auth = btoa(`${IMAGEKIT_PRIVATE_KEY}:`)
+  const auth = toBase64Utf8(`${IMAGEKIT_PRIVATE_KEY}:`)
   const res = await fetch(url, { headers: { Authorization: `Basic ${auth}` } })
   if (!res.ok) {
     const text = await res.text()
