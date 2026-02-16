@@ -112,6 +112,8 @@ function App() {
   const currentPerson = unratedPeople.find((person) => person.id === currentId) ?? null
   const currentScore = currentPerson ? scores[currentPerson.id] ?? { total: 0, count: 0 } : { total: 0, count: 0 }
   const currentAverage = currentScore.count ? currentScore.total / currentScore.count : 0
+  const currentAverageStars = Math.max(0, Math.min(5, Math.round(currentAverage)))
+  const currentStarsText = `${'★'.repeat(currentAverageStars)}${'☆'.repeat(5 - currentAverageStars)}`
 
   useEffect(() => {
     localStorage.setItem(RATED_FACE_IDS_STORAGE_KEY, JSON.stringify(ratedFaceIds))
@@ -268,8 +270,10 @@ function App() {
           </section>
 
           <section className="score-box">
-            <p className="score-label">이 인물 평균 점수</p>
-            <p className="score-number">{currentAverage.toFixed(2)}</p>
+            <p className="score-label">현재 점수</p>
+            <p className="score-number" aria-label={`현재 평균 ${currentAverage.toFixed(2)}점`}>
+              {currentStarsText}
+            </p>
             <p className="score-sub">총 {currentScore.count}명 평가</p>
 
             <div className="stars" onMouseLeave={() => setHoverStars(0)}>
