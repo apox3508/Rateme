@@ -94,12 +94,18 @@ function loadRatedFaceIds() {
 }
 
 function ScoreStar({ fillRatio, index }: { fillRatio: number; index: number }) {
+  const clippedRight = Math.round((1 - Math.max(0, Math.min(1, fillRatio))) * 100)
   return (
     <span className="score-star-figure">
       <img className="score-star-icon-image empty" src={REFERENCE_STAR_URL} alt="" loading="lazy" decoding="async" />
-      <span className="score-star-fill" style={{ width: `${Math.round(fillRatio * 100)}%` }}>
-        <img className="score-star-icon-image filled" src={REFERENCE_STAR_URL} alt="" loading="lazy" decoding="async" />
-      </span>
+      <img
+        className="score-star-icon-image filled"
+        src={REFERENCE_STAR_URL}
+        alt=""
+        loading="lazy"
+        decoding="async"
+        style={{ clipPath: `inset(0 ${clippedRight}% 0 0)` }}
+      />
       <span className="sr-only">{`현재 점수 별 ${index}`}</span>
     </span>
   )
