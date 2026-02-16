@@ -188,7 +188,7 @@ async function fetchWikiTitle(name: string) {
     if (!summaryRes.ok) continue
 
     const summaryJson = (await summaryRes.json()) as { extract?: string; description?: string }
-    const summary = summaryJson.extract ?? summaryJson.description
+    const summary = summaryJson.description ?? summaryJson.extract
     if (!summary) continue
 
     return sentenceClamp(summary)
