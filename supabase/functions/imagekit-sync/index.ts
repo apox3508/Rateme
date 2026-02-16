@@ -44,6 +44,44 @@ function sentenceClamp(text: string, max = 120) {
   return `${singleLine.slice(0, max - 1).trimEnd()}…`
 }
 
+function extractOccupation(summary: string) {
+  const lower = summary.toLowerCase()
+  const pairs: Array<[string, string]> = [
+    ['singer-songwriter', 'Singer'],
+    ['singer', 'Singer'],
+    ['actor', 'Actor'],
+    ['actress', 'Actor'],
+    ['rapper', 'Rapper'],
+    ['model', 'Model'],
+    ['producer', 'Producer'],
+    ['songwriter', 'Songwriter'],
+    ['composer', 'Composer'],
+    ['dancer', 'Dancer'],
+    ['comedian', 'Comedian'],
+    ['politician', 'Politician'],
+    ['athlete', 'Athlete'],
+    ['footballer', 'Footballer'],
+    ['musician', 'Musician'],
+    ['가수', 'Singer'],
+    ['배우', 'Actor'],
+    ['래퍼', 'Rapper'],
+    ['모델', 'Model'],
+    ['프로듀서', 'Producer'],
+    ['작곡가', 'Composer'],
+    ['댄서', 'Dancer'],
+    ['코미디언', 'Comedian'],
+    ['정치인', 'Politician'],
+    ['운동선수', 'Athlete'],
+    ['축구선수', 'Footballer'],
+    ['뮤지션', 'Musician'],
+  ]
+
+  for (const [needle, title] of pairs) {
+    if (lower.includes(needle)) return title
+  }
+  return null
+}
+
 async function fetchWikiTitle(name: string) {
   const targets = [
     { wikiApi: 'https://ko.wikipedia.org/w/api.php', summaryBase: 'https://ko.wikipedia.org/api/rest_v1/page/summary/' },
@@ -72,10 +110,12 @@ async function fetchWikiTitle(name: string) {
     const summary = summaryJson.description ?? summaryJson.extract
     if (!summary) continue
 
-    return sentenceClamp(summary)
+    const occupation = extractOccupation(summary)
+    if (occupation) return occupation
+    return sentenceClamp(summary, 32)
   }
 
-  return `${name}에 대한 평가 항목`
+  return 'Public Figure'
 }
 
 function jsonResponse(status: number, body: Record<string, unknown>) {
