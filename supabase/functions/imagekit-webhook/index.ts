@@ -171,6 +171,14 @@ function canonicalizeName(value: string) {
     .replace(/[^a-z0-9가-힣]+/g, '')
 }
 
+function manualTitleOverride(name: string) {
+  const normalized = canonicalizeName(name)
+  if (normalized.includes('kimkardashian') || normalized.includes('kardashian')) {
+    return 'Celebrity'
+  }
+  return null
+}
+
 function isLikelyMediaWork(summary: string) {
   const lower = summary.toLowerCase()
   const mediaMarkers = [
@@ -238,6 +246,9 @@ function extractOccupation(summary: string) {
 }
 
 async function fetchWikiTitle(name: string) {
+  const override = manualTitleOverride(name)
+  if (override) return override
+
   const targets = [
     { wikiApi: 'https://ko.wikipedia.org/w/api.php', summaryBase: 'https://ko.wikipedia.org/api/rest_v1/page/summary/' },
     { wikiApi: 'https://en.wikipedia.org/w/api.php', summaryBase: 'https://en.wikipedia.org/api/rest_v1/page/summary/' },
