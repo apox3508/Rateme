@@ -44,8 +44,44 @@ function sentenceClamp(text: string, max = 120) {
   return `${singleLine.slice(0, max - 1).trimEnd()}…`
 }
 
+function canonicalizeName(value: string) {
+  return value
+    .normalize('NFKD')
+    .replace(/\p{M}/gu, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9가-힣]+/g, '')
+}
+
+function isLikelyMediaWork(summary: string) {
+  const lower = summary.toLowerCase()
+  const mediaMarkers = [
+    'album',
+    'song',
+    'single',
+    'film',
+    'television series',
+    'tv series',
+    'soundtrack',
+    'novel',
+    'video game',
+    'episode',
+    'disambiguation',
+    '앨범',
+    '노래',
+    '싱글',
+    '영화',
+    '드라마',
+    '사운드트랙',
+    '소설',
+    '게임',
+    '동음이의',
+  ]
+  return mediaMarkers.some((marker) => lower.includes(marker))
+}
+
 function extractOccupation(summary: string) {
   const lower = summary.toLowerCase()
+  if (isLikelyMediaWork(summary)) return null
   const pairs: Array<[string, string]> = [
     ['singer-songwriter', 'Singer'],
     ['singer', 'Singer'],
@@ -92,7 +128,7 @@ async function fetchWikiTitle(name: string) {
     const searchUrl = new URL(target.wikiApi)
     searchUrl.searchParams.set('action', 'opensearch')
     searchUrl.searchParams.set('search', name)
-    searchUrl.searchParams.set('limit', '1')
+    searchUrl.searchParams.set('limit', '5')
     searchUrl.searchParams.set('namespace', '0')
     searchUrl.searchParams.set('format', 'json')
 
@@ -100,19 +136,31 @@ async function fetchWikiTitle(name: string) {
     if (!searchRes.ok) continue
 
     const searchJson = (await searchRes.json()) as [string, string[]]
-    const firstTitle = searchJson?.[1]?.[0]
-    if (!firstTitle) continue
+    const titles = searchJson?.[1] ?? []
+    const directTitle = decodeURIComponent(name).replace(/\.[^/.]+$/, '').trim()
+    const candidates = Array.from(new Set([directTitle, ...titles])).filter(Boolean)
+    const canonicalName = canonicalizeName(name)
+    const ranked = candidates
+      .map((title) => {
+        let score = 0
+        if (canonicalizeName(title) === canonicalName) score += 100
+        if (!title.includes('(')) score += 10
+        if (title.toLowerCase().includes('disambiguation')) score -= 50
+        return { title, score }
+      })
+      .sort((a, b) => b.score - a.score)
 
-    const summaryRes = await fetch(`${target.summaryBase}${encodeURIComponent(firstTitle)}`)
-    if (!summaryRes.ok) continue
+    for (const candidate of ranked) {
+      const summaryRes = await fetch(`${target.summaryBase}${encodeURIComponent(candidate.title)}`)
+      if (!summaryRes.ok) continue
 
-    const summaryJson = (await summaryRes.json()) as { extract?: string; description?: string }
-    const summary = summaryJson.description ?? summaryJson.extract
-    if (!summary) continue
+      const summaryJson = (await summaryRes.json()) as { extract?: string; description?: string; title?: string }
+      const summary = summaryJson.description ?? summaryJson.extract
+      if (!summary) continue
 
-    const occupation = extractOccupation(summary)
-    if (occupation) return occupation
-    return sentenceClamp(summary, 32)
+      const occupation = extractOccupation(summary)
+      if (occupation) return occupation
+    }
   }
 
   return 'Public Figure'
