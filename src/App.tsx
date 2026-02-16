@@ -113,17 +113,6 @@ function App() {
   const currentScore = currentPerson ? scores[currentPerson.id] ?? { total: 0, count: 0 } : { total: 0, count: 0 }
   const currentAverage = currentScore.count ? currentScore.total / currentScore.count : 0
 
-  const overallStats = useMemo(() => {
-    return Object.values(scores).reduce(
-      (acc, current) => {
-        acc.total += current.total
-        acc.count += current.count
-        return acc
-      },
-      { total: 0, count: 0 },
-    )
-  }, [scores])
-
   useEffect(() => {
     localStorage.setItem(RATED_FACE_IDS_STORAGE_KEY, JSON.stringify(ratedFaceIds))
   }, [ratedFaceIds])
@@ -279,7 +268,7 @@ function App() {
           </section>
 
           <section className="score-box">
-            <p className="score-label">현재 인물 평균</p>
+            <p className="score-label">이 인물 평균 점수</p>
             <p className="score-number">{currentAverage.toFixed(2)}</p>
             <p className="score-sub">총 {currentScore.count}명 평가</p>
 
@@ -306,9 +295,6 @@ function App() {
       )}
 
       <section className="summary">
-        <h3>전체 누적 통계</h3>
-        <p>총 평점 수: {overallStats.count}</p>
-        <p>전체 평균: {overallStats.count ? (overallStats.total / overallStats.count).toFixed(2) : '0.00'}</p>
         <p className="last-vote">
           {lastVote ? `최근 평가: ${lastVote.personName} ${lastVote.rating}점` : '아직 평가가 없습니다.'}
         </p>
