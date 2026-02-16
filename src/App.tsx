@@ -91,6 +91,43 @@ function loadRatedFaceIds() {
   }
 }
 
+function ScoreStar({ filled, index }: { filled: boolean; index: number }) {
+  const gradientId = `score-star-gradient-${index}`
+  const shadowId = `score-star-shadow-${index}`
+
+  return (
+    <svg className="score-star-icon" viewBox="0 0 24 24" aria-hidden="true">
+      <defs>
+        <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#fffbe0" />
+          <stop offset="34%" stopColor="#fcd34d" />
+          <stop offset="68%" stopColor="#f59e0b" />
+          <stop offset="100%" stopColor="#b45309" />
+        </linearGradient>
+        <filter id={shadowId} x="-40%" y="-40%" width="180%" height="180%">
+          <feDropShadow dx="0" dy="1.2" stdDeviation="0.55" floodColor="#ffffff" floodOpacity="0.48" />
+          <feDropShadow dx="0" dy="2.4" stdDeviation="0.9" floodColor="#92400e" floodOpacity="0.4" />
+          <feDropShadow dx="0" dy="5.6" stdDeviation="1.9" floodColor="#f59e0b" floodOpacity="0.34" />
+        </filter>
+      </defs>
+      <path
+        d="M12 2.35l2.85 5.77 6.37.93-4.61 4.49 1.09 6.35L12 16.9l-5.7 2.99 1.09-6.35L2.78 9.05l6.37-.93L12 2.35z"
+        fill={filled ? `url(#${gradientId})` : '#d6deeb'}
+        stroke={filled ? '#b45309' : '#b7c4d8'}
+        strokeWidth="0.7"
+        filter={filled ? `url(#${shadowId})` : undefined}
+      />
+      {filled && (
+        <path
+          d="M12 4.25l2.06 4.19 4.64.68-3.35 3.27.79 4.61L12 14.82 7.86 17l.79-4.61L5.3 9.12l4.64-.68L12 4.25z"
+          fill="rgba(255,255,255,0.26)"
+          transform="translate(-0.22 -0.28) scale(0.96)"
+        />
+      )}
+    </svg>
+  )
+}
+
 function App() {
   const [people, setPeople] = useState<Person[]>([])
   const [currentId, setCurrentId] = useState<number | null>(null)
@@ -272,9 +309,7 @@ function App() {
             <p className="score-label">현재 점수</p>
             <p className="score-number" aria-label={`현재 평균 ${currentAverage.toFixed(2)}점`}>
               {[1, 2, 3, 4, 5].map((star) => (
-                <span key={star} className={`score-star ${star <= currentAverageStars ? 'filled' : 'empty'}`}>
-                  ★
-                </span>
+                <ScoreStar key={star} index={star} filled={star <= currentAverageStars} />
               ))}
             </p>
             <p className="score-sub">총 {currentScore.count}명 평가</p>
