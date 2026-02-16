@@ -7,12 +7,18 @@ type ImageKitWebhookPayload = {
   id?: string
   type?: string
   createdAt?: string
+  created_at?: string
   data?: {
     fileId?: string
     filePath?: string
     name?: string
     url?: string
     fileType?: string
+    asset?: {
+      url?: string
+      name?: string
+      fileType?: string
+    }
   }
 }
 
@@ -115,8 +121,7 @@ function normalizeName(fileName: string) {
   const noExt = fileName.replace(/\.[^/.]+$/, '')
   const decoded = decodeURIComponent(noExt)
   const withSpaces = decoded.replace(/[_-]+/g, ' ')
-  const noHashTail = withSpaces.replace(/\s+[a-z0-9]{6,}$/i, '')
-  const normalized = noHashTail.replace(/\s+/g, ' ').trim()
+  const normalized = withSpaces.replace(/\s+/g, ' ').trim()
   return normalized || 'Unknown'
 }
 
@@ -226,21 +231,24 @@ Deno.serve(async (req) => {
   }
 
   const payload = JSON.parse(body) as ImageKitWebhookPayload
-  if (payload.type !== 'upload.pre-transform.success') {
+  const acceptedTypes = new Set(['upload.pre-transform.success', 'upload.post-transform.success'])
+  const hasUsableMediaData = !!(payload.data?.url || payload.data?.asset?.url)
+  if (!acceptedTypes.has(payload.type ?? '') && !hasUsableMediaData) {
     return jsonResponse(202, { ignored: true, reason: 'unsupported_event', type: payload.type ?? null })
   }
 
-  const fileType = payload.data?.fileType?.toLowerCase()
+  const fileType = (payload.data?.fileType ?? payload.data?.asset?.fileType ?? '').toLowerCase()
   if (fileType && fileType !== 'image') {
     return jsonResponse(202, { ignored: true, reason: 'non_image' })
   }
 
-  const imageUrl = payload.data?.url?.split('?')[0]
+  const imageUrl = (payload.data?.url ?? payload.data?.asset?.url)?.split('?')[0]
   if (!imageUrl) {
     return jsonResponse(400, { error: 'Missing image URL in webhook payload.' })
   }
 
-  const rawName = payload.data?.name ?? payload.data?.filePath?.split('/').pop() ?? 'unknown'
+  const rawName =
+    payload.data?.name ?? payload.data?.asset?.name ?? payload.data?.filePath?.split('/').pop() ?? 'unknown'
   const name = normalizeName(rawName)
   const title = await fetchWikiTitle(name)
 
