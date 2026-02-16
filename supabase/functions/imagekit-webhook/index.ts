@@ -6,8 +6,13 @@ const ENABLE_SIGNATURE_CHECK = (Deno.env.get('IMAGEKIT_VERIFY_SIGNATURE') ?? 'tr
 type ImageKitWebhookPayload = {
   id?: string
   type?: string
+  event?: string
   createdAt?: string
   created_at?: string
+  name?: string
+  url?: string
+  fileType?: string
+  filePath?: string
   data?: {
     fileId?: string
     filePath?: string
@@ -19,6 +24,24 @@ type ImageKitWebhookPayload = {
       name?: string
       fileType?: string
     }
+    file?: {
+      url?: string
+      name?: string
+      fileType?: string
+      filePath?: string
+    }
+  }
+  file?: {
+    url?: string
+    name?: string
+    fileType?: string
+    filePath?: string
+  }
+  payload?: {
+    url?: string
+    name?: string
+    fileType?: string
+    filePath?: string
   }
 }
 
@@ -123,6 +146,15 @@ function normalizeName(fileName: string) {
   const withSpaces = decoded.replace(/[_-]+/g, ' ')
   const normalized = withSpaces.replace(/\s+/g, ' ').trim()
   return normalized || 'Unknown'
+}
+
+function pickFirstString(...candidates: Array<string | undefined | null>) {
+  for (const candidate of candidates) {
+    if (typeof candidate === 'string' && candidate.trim().length > 0) {
+      return candidate
+    }
+  }
+  return null
 }
 
 function sentenceClamp(text: string, max = 120) {
@@ -231,24 +263,50 @@ Deno.serve(async (req) => {
   }
 
   const payload = JSON.parse(body) as ImageKitWebhookPayload
-  const acceptedTypes = new Set(['upload.pre-transform.success', 'upload.post-transform.success'])
-  const hasUsableMediaData = !!(payload.data?.url || payload.data?.asset?.url)
-  if (!acceptedTypes.has(payload.type ?? '') && !hasUsableMediaData) {
-    return jsonResponse(202, { ignored: true, reason: 'unsupported_event', type: payload.type ?? null })
-  }
+  const eventType = payload.type ?? payload.event ?? null
 
-  const fileType = (payload.data?.fileType ?? payload.data?.asset?.fileType ?? '').toLowerCase()
+  const fileType = (
+    pickFirstString(
+      payload.data?.fileType,
+      payload.data?.asset?.fileType,
+      payload.data?.file?.fileType,
+      payload.file?.fileType,
+      payload.payload?.fileType,
+      payload.fileType,
+    ) ?? ''
+  ).toLowerCase()
   if (fileType && fileType !== 'image') {
     return jsonResponse(202, { ignored: true, reason: 'non_image' })
   }
 
-  const imageUrl = (payload.data?.url ?? payload.data?.asset?.url)?.split('?')[0]
+  const imageUrlRaw = pickFirstString(
+    payload.data?.url,
+    payload.data?.asset?.url,
+    payload.data?.file?.url,
+    payload.file?.url,
+    payload.payload?.url,
+    payload.url,
+  )
+  const imageUrl = imageUrlRaw?.split('?')[0]
   if (!imageUrl) {
-    return jsonResponse(400, { error: 'Missing image URL in webhook payload.' })
+    return jsonResponse(202, { ignored: true, reason: 'missing_image_url', eventType })
   }
 
   const rawName =
-    payload.data?.name ?? payload.data?.asset?.name ?? payload.data?.filePath?.split('/').pop() ?? 'unknown'
+    pickFirstString(
+      payload.data?.name,
+      payload.data?.asset?.name,
+      payload.data?.file?.name,
+      payload.file?.name,
+      payload.payload?.name,
+      payload.name,
+      payload.data?.filePath?.split('/').pop(),
+      payload.data?.file?.filePath?.split('/').pop(),
+      payload.file?.filePath?.split('/').pop(),
+      payload.payload?.filePath?.split('/').pop(),
+      payload.filePath?.split('/').pop(),
+      imageUrl.split('/').pop(),
+    ) ?? 'unknown'
   const name = normalizeName(rawName)
   const title = await fetchWikiTitle(name)
 
@@ -261,7 +319,7 @@ Deno.serve(async (req) => {
 
   return jsonResponse(200, {
     ok: true,
-    eventType: payload.type,
+    eventType,
     name,
     title,
     imageUrl,
