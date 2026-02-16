@@ -99,10 +99,19 @@ h1 {
 
 .score-number {
   margin: 0;
-  font-size: 2.7rem;
+  display: inline-block;
+  font-size: 2.5rem;
   line-height: 1;
   font-weight: 800;
-  color: #0f172a;
+  letter-spacing: 0.08em;
+  color: #f59e0b;
+  background: linear-gradient(180deg, #fef3c7 0%, #fbbf24 45%, #d97706 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.3),
+    0 8px 18px rgba(217, 119, 6, 0.22);
 }
 
 .score-sub,
