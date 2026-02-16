@@ -92,36 +92,61 @@ function loadRatedFaceIds() {
 }
 
 function ScoreStar({ filled, index }: { filled: boolean; index: number }) {
-  const gradientId = `score-star-gradient-${index}`
-  const shadowId = `score-star-shadow-${index}`
+  const gradientId = `score-star-gold-${index}`
+  const bevelId = `score-star-bevel-${index}`
+  const shadowId = `score-star-depth-${index}`
 
   return (
     <svg className="score-star-icon" viewBox="0 0 24 24" aria-hidden="true">
       <defs>
-        <linearGradient id={gradientId} x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#fffbe0" />
-          <stop offset="34%" stopColor="#fcd34d" />
-          <stop offset="68%" stopColor="#f59e0b" />
+        <linearGradient id={gradientId} x1="5%" y1="0%" x2="95%" y2="100%">
+          <stop offset="0%" stopColor="#fffce8" />
+          <stop offset="24%" stopColor="#fde68a" />
+          <stop offset="48%" stopColor="#facc15" />
+          <stop offset="78%" stopColor="#f59e0b" />
           <stop offset="100%" stopColor="#b45309" />
         </linearGradient>
-        <filter id={shadowId} x="-40%" y="-40%" width="180%" height="180%">
-          <feDropShadow dx="0" dy="1.2" stdDeviation="0.55" floodColor="#ffffff" floodOpacity="0.48" />
-          <feDropShadow dx="0" dy="2.4" stdDeviation="0.9" floodColor="#92400e" floodOpacity="0.4" />
-          <feDropShadow dx="0" dy="5.6" stdDeviation="1.9" floodColor="#f59e0b" floodOpacity="0.34" />
+        <linearGradient id={bevelId} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="rgba(255,255,255,0.68)" />
+          <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+        </linearGradient>
+        <filter id={shadowId} x="-45%" y="-45%" width="190%" height="190%">
+          <feDropShadow dx="0" dy="1.4" stdDeviation="0.75" floodColor="#fff8db" floodOpacity="0.6" />
+          <feDropShadow dx="0" dy="2.8" stdDeviation="1.15" floodColor="#92400e" floodOpacity="0.52" />
+          <feDropShadow dx="0" dy="6.2" stdDeviation="2.15" floodColor="#b45309" floodOpacity="0.38" />
         </filter>
       </defs>
-      <path
-        d="M12 2.35l2.85 5.77 6.37.93-4.61 4.49 1.09 6.35L12 16.9l-5.7 2.99 1.09-6.35L2.78 9.05l6.37-.93L12 2.35z"
-        fill={filled ? `url(#${gradientId})` : '#d6deeb'}
-        stroke={filled ? '#b45309' : '#b7c4d8'}
-        strokeWidth="0.7"
-        filter={filled ? `url(#${shadowId})` : undefined}
-      />
-      {filled && (
+      {filled ? (
+        <>
+          <path
+            d="M12 3.1l2.8 5.68 6.27.91-4.53 4.41 1.07 6.24L12 17.42l-5.61 2.92 1.08-6.24-4.53-4.41 6.27-.91L12 3.1z"
+            fill="#7c2d12"
+            opacity="0.62"
+            transform="translate(0 0.7)"
+          />
+          <path
+            d="M12 2.35l2.85 5.77 6.37.93-4.61 4.49 1.09 6.35L12 16.9l-5.7 2.99 1.09-6.35L2.78 9.05l6.37-.93L12 2.35z"
+            fill={`url(#${gradientId})`}
+            stroke="#9a3412"
+            strokeWidth="0.85"
+            filter={`url(#${shadowId})`}
+          />
+          <path
+            d="M12 3.35l2.46 4.99 5.51.81-3.99 3.88.95 5.48L12 15.95l-4.94 2.56.95-5.48-3.99-3.88 5.51-.81L12 3.35z"
+            fill={`url(#${bevelId})`}
+          />
+          <path
+            d="M12 4.2l1.9 3.84 4.24.62-3.07 2.98.73 4.22L12 13.92l-3.8 1.94.73-4.22-3.07-2.98 4.24-.62L12 4.2z"
+            fill="rgba(255,255,255,0.19)"
+            transform="translate(-0.1 -0.24)"
+          />
+        </>
+      ) : (
         <path
-          d="M12 4.25l2.06 4.19 4.64.68-3.35 3.27.79 4.61L12 14.82 7.86 17l.79-4.61L5.3 9.12l4.64-.68L12 4.25z"
-          fill="rgba(255,255,255,0.26)"
-          transform="translate(-0.22 -0.28) scale(0.96)"
+          d="M12 2.35l2.85 5.77 6.37.93-4.61 4.49 1.09 6.35L12 16.9l-5.7 2.99 1.09-6.35L2.78 9.05l6.37-.93L12 2.35z"
+          fill="#dee6f1"
+          stroke="#afbccf"
+          strokeWidth="0.85"
         />
       )}
     </svg>
