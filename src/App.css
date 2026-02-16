@@ -114,20 +114,40 @@ h1 {
 
 .score-number {
   margin: 0.2rem 0 0;
-  display: inline-block;
-  font-size: clamp(2.2rem, 6vw, 3rem);
+  display: flex;
+  gap: 0.36rem;
+  align-items: center;
+  width: fit-content;
+  padding: 0.22rem 0.1rem 0.08rem;
+}
+
+.score-star {
+  font-size: clamp(2.05rem, 5.6vw, 2.7rem);
   line-height: 1;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-  color: #f59e0b;
-  background: linear-gradient(180deg, #fff7d6 0%, #fbbf24 42%, #ca8a04 100%);
+  font-weight: 900;
+  transform-origin: center;
+  transition: transform 150ms ease;
+}
+
+.score-star.filled {
+  color: #ffe9b3;
+  background: linear-gradient(180deg, #fff9df 0%, #facc15 48%, #d97706 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   text-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.4),
-    0 10px 24px rgba(217, 119, 6, 0.28);
-  filter: drop-shadow(0 2px 6px rgba(250, 204, 21, 0.28));
+    0 1px 0 rgba(255, 255, 255, 0.55),
+    0 2px 0 rgba(180, 83, 9, 0.34),
+    0 10px 18px rgba(180, 83, 9, 0.34);
+  filter: drop-shadow(0 4px 10px rgba(245, 158, 11, 0.35));
+}
+
+.score-star.empty {
+  color: #d8dee9;
+  text-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.9),
+    0 3px 6px rgba(148, 163, 184, 0.28);
+  opacity: 0.95;
 }
 
 .score-sub,

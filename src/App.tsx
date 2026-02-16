@@ -113,7 +113,6 @@ function App() {
   const currentScore = currentPerson ? scores[currentPerson.id] ?? { total: 0, count: 0 } : { total: 0, count: 0 }
   const currentAverage = currentScore.count ? currentScore.total / currentScore.count : 0
   const currentAverageStars = Math.max(0, Math.min(5, Math.round(currentAverage)))
-  const currentStarsText = `${'★'.repeat(currentAverageStars)}${'☆'.repeat(5 - currentAverageStars)}`
 
   useEffect(() => {
     localStorage.setItem(RATED_FACE_IDS_STORAGE_KEY, JSON.stringify(ratedFaceIds))
@@ -272,7 +271,11 @@ function App() {
           <section className="score-box">
             <p className="score-label">현재 점수</p>
             <p className="score-number" aria-label={`현재 평균 ${currentAverage.toFixed(2)}점`}>
-              {currentStarsText}
+              {[1, 2, 3, 4, 5].map((star) => (
+                <span key={star} className={`score-star ${star <= currentAverageStars ? 'filled' : 'empty'}`}>
+                  ★
+                </span>
+              ))}
             </p>
             <p className="score-sub">총 {currentScore.count}명 평가</p>
 
