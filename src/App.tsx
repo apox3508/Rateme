@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import './App.css'
@@ -31,6 +31,7 @@ type RatingRow = {
 const DEVICE_RATED_FACE_IDS_STORAGE_KEY = 'rateme_rated_face_ids_v1'
 const LEGACY_RATED_FACE_IDS_KEYS = ['rateme_rated_face_ids', 'rateme_rated_face_ids_anon', 'rateme_rated_face_ids_guest']
 const LEGACY_RATED_FACE_IDS_PREFIX = 'rateme_rated_face_ids_'
+const AUTH_PANEL_ANIMATION_MS = 220
 const REFERENCE_STAR_URL =
   'https://ik.imagekit.io/rat3me/New%20Folder/pngtree-three-dimensional-golden-star-with-sharp-points-and-a-smooth-surface-png-image_16474576.png'
 
@@ -137,6 +138,7 @@ function ScoreStar({ fillRatio, index }: { fillRatio: number; index: number }) {
 function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [showAuthPanel, setShowAuthPanel] = useState(false)
+  const [isAuthPanelClosing, setIsAuthPanelClosing] = useState(false)
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -151,6 +153,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true)
   const [pendingWrites, setPendingWrites] = useState(0)
   const [ratedFaceIds, setRatedFaceIds] = useState<number[]>(() => loadDeviceRatedFaceIds())
+  const authPanelCloseTimerRef = useRef<number | null>(null)
 
   const ratedFaceIdsSet = useMemo(() => new Set(ratedFaceIds), [ratedFaceIds])
   const unratedPeople = useMemo(
@@ -163,6 +166,18 @@ function App() {
   const currentScore = currentPerson ? scores[currentPerson.id] ?? { total: 0, count: 0 } : { total: 0, count: 0 }
   const currentAverage = currentScore.count ? currentScore.total / currentScore.count : 0
 
+  const closeAuthPanel = () => {
+    if (!showAuthPanel || isAuthPanelClosing) {
+      return
+    }
+    setIsAuthPanelClosing(true)
+    authPanelCloseTimerRef.current = window.setTimeout(() => {
+      setShowAuthPanel(false)
+      setIsAuthPanelClosing(false)
+      authPanelCloseTimerRef.current = null
+    }, AUTH_PANEL_ANIMATION_MS)
+  }
+
   useEffect(() => {
     if (unratedPeople.length === 0) {
       setCurrentId(null)
@@ -173,6 +188,14 @@ function App() {
       setCurrentId(pickRandomPersonId(unratedPeople))
     }
   }, [unratedPeople, currentId])
+
+  useEffect(() => {
+    return () => {
+      if (authPanelCloseTimerRef.current !== null) {
+        window.clearTimeout(authPanelCloseTimerRef.current)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     if (!supabase || !hasSupabaseConfig) {
@@ -325,7 +348,7 @@ function App() {
         setAuthNotice('회원가입 완료. 이메일 인증 후 로그인해 주세요.')
       } else {
         setAuthNotice('회원가입 및 로그인 완료.')
-        setShowAuthPanel(false)
+        closeAuthPanel()
       }
 
       return
@@ -342,7 +365,7 @@ function App() {
     }
 
     setPassword('')
-    setShowAuthPanel(false)
+    closeAuthPanel()
   }
 
   const handleSignOut = async () => {
@@ -420,7 +443,12 @@ function App() {
             type="button"
             className="login-mini"
             onClick={() => {
-              setShowAuthPanel((prev) => !prev)
+              if (showAuthPanel) {
+                closeAuthPanel()
+              } else {
+                setIsAuthPanelClosing(false)
+                setShowAuthPanel(true)
+              }
               setAuthError(null)
               setAuthNotice(null)
             }}
@@ -434,8 +462,8 @@ function App() {
         )}
       </section>
       <p className="description">별점을 누르는 순간, 다음 랜덤 사진으로 바로 넘어갑니다. 당신의 점수는 실시간으로 모두에게 공유됩니다.</p>
-      {showAuthPanel && !session && (
-        <section className="auth-card auth-card-enter">
+      {(showAuthPanel || isAuthPanelClosing) && !session && (
+        <section className={`auth-card ${isAuthPanelClosing ? 'auth-card-exit' : 'auth-card-enter'}`}>
           <h2>{authMode === 'signin' ? '로그인' : '회원가입'}</h2>
           <form className="auth-form" onSubmit={handleAuthSubmit}>
             <label htmlFor="email">이메일</label>
