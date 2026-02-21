@@ -28,7 +28,9 @@ type RatingRow = {
   score: number
 }
 
-const ANON_RATED_FACE_IDS_STORAGE_KEY = 'rateme_rated_face_ids_anon'
+const DEVICE_RATED_FACE_IDS_STORAGE_KEY = 'rateme_rated_face_ids_v1'
+const LEGACY_RATED_FACE_IDS_KEYS = ['rateme_rated_face_ids', 'rateme_rated_face_ids_anon', 'rateme_rated_face_ids_guest']
+const LEGACY_RATED_FACE_IDS_PREFIX = 'rateme_rated_face_ids_'
 const REFERENCE_STAR_URL =
   'https://ik.imagekit.io/rat3me/New%20Folder/pngtree-three-dimensional-golden-star-with-sharp-points-and-a-smooth-surface-png-image_16474576.png'
 
@@ -77,17 +79,38 @@ function aggregateScores(faces: Person[], ratings: RatingRow[]) {
   return nextScores
 }
 
-function loadAnonRatedFaceIds() {
+function parseRatedFaceIds(raw: string | null) {
+  if (!raw) {
+    return []
+  }
+
+  const parsed = JSON.parse(raw) as unknown
+  if (!Array.isArray(parsed)) {
+    return []
+  }
+
+  return parsed.filter((value): value is number => typeof value === 'number')
+}
+
+function loadDeviceRatedFaceIds() {
   try {
-    const raw = localStorage.getItem(ANON_RATED_FACE_IDS_STORAGE_KEY)
-    if (!raw) {
-      return []
+    const merged = new Set<number>(parseRatedFaceIds(localStorage.getItem(DEVICE_RATED_FACE_IDS_STORAGE_KEY)))
+
+    LEGACY_RATED_FACE_IDS_KEYS.forEach((key) => {
+      parseRatedFaceIds(localStorage.getItem(key)).forEach((id) => merged.add(id))
+    })
+
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const key = localStorage.key(i)
+      if (!key) {
+        continue
+      }
+      if (key.startsWith(LEGACY_RATED_FACE_IDS_PREFIX)) {
+        parseRatedFaceIds(localStorage.getItem(key)).forEach((id) => merged.add(id))
+      }
     }
-    const parsed = JSON.parse(raw) as unknown
-    if (!Array.isArray(parsed)) {
-      return []
-    }
-    return parsed.filter((value): value is number => typeof value === 'number')
+
+    return Array.from(merged)
   } catch {
     return []
   }
@@ -127,7 +150,7 @@ function App() {
   const [syncError, setSyncError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [pendingWrites, setPendingWrites] = useState(0)
-  const [ratedFaceIds, setRatedFaceIds] = useState<number[]>(() => loadAnonRatedFaceIds())
+  const [ratedFaceIds, setRatedFaceIds] = useState<number[]>(() => loadDeviceRatedFaceIds())
 
   const ratedFaceIdsSet = useMemo(() => new Set(ratedFaceIds), [ratedFaceIds])
   const unratedPeople = useMemo(
@@ -183,16 +206,8 @@ function App() {
   }, [])
 
   useEffect(() => {
-    if (!session) {
-      setRatedFaceIds(loadAnonRatedFaceIds())
-    }
-  }, [session])
-
-  useEffect(() => {
-    if (!session) {
-      localStorage.setItem(ANON_RATED_FACE_IDS_STORAGE_KEY, JSON.stringify(ratedFaceIds))
-    }
-  }, [session, ratedFaceIds])
+    localStorage.setItem(DEVICE_RATED_FACE_IDS_STORAGE_KEY, JSON.stringify(ratedFaceIds))
+  }, [ratedFaceIds])
 
   useEffect(() => {
     if (!supabase || !hasSupabaseConfig) {
@@ -211,7 +226,7 @@ function App() {
         client.from('ratings').select('face_id,score'),
         session
           ? client.from('ratings').select('face_id').eq('user_id', session.user.id)
-          : Promise.resolve({ data: loadAnonRatedFaceIds().map((face_id) => ({ face_id })), error: null }),
+          : Promise.resolve({ data: [], error: null }),
       ])
 
       if (isCancelled) {
@@ -240,9 +255,9 @@ function App() {
 
       setPeople(nextPeople)
       setScores(nextScores)
-      setRatedFaceIds(
-        Array.from(new Set(((myRatingsResult.data ?? []) as Array<{ face_id: number }>).map((row) => row.face_id))),
-      )
+      const myRatedFaceIds = ((myRatingsResult.data ?? []) as Array<{ face_id: number }>).map((row) => row.face_id)
+      const deviceRatedFaceIds = loadDeviceRatedFaceIds()
+      setRatedFaceIds(Array.from(new Set([...deviceRatedFaceIds, ...myRatedFaceIds])))
       setSyncError(null)
       setIsLoading(false)
     }
@@ -366,10 +381,11 @@ function App() {
 
     setPendingWrites((prev) => prev + 1)
 
-    const { error } = await client.from('ratings').insert({
-      face_id: ratedPersonId,
-      score: rating,
-    })
+    const payload = session
+      ? { face_id: ratedPersonId, score: rating, user_id: session.user.id }
+      : { face_id: ratedPersonId, score: rating }
+
+    const { error } = await client.from('ratings').insert(payload)
 
     setPendingWrites((prev) => Math.max(0, prev - 1))
 
