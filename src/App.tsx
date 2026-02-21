@@ -230,8 +230,10 @@ function App() {
   }, [])
 
   useEffect(() => {
-    localStorage.setItem(DEVICE_RATED_FACE_IDS_STORAGE_KEY, JSON.stringify(ratedFaceIds))
-  }, [ratedFaceIds])
+    if (!session) {
+      localStorage.setItem(DEVICE_RATED_FACE_IDS_STORAGE_KEY, JSON.stringify(ratedFaceIds))
+    }
+  }, [ratedFaceIds, session])
 
   useEffect(() => {
     if (!supabase || !hasSupabaseConfig) {
@@ -280,8 +282,13 @@ function App() {
       setPeople(nextPeople)
       setScores(nextScores)
       const myRatedFaceIds = ((myRatingsResult.data ?? []) as Array<{ face_id: number }>).map((row) => row.face_id)
-      const deviceRatedFaceIds = loadDeviceRatedFaceIds()
-      setRatedFaceIds(Array.from(new Set([...deviceRatedFaceIds, ...myRatedFaceIds])))
+      if (session) {
+        // 로그인 상태에서는 해당 계정의 평가 이력만 기준으로 필터링
+        setRatedFaceIds(Array.from(new Set(myRatedFaceIds)))
+      } else {
+        // 비로그인 상태에서는 기기(localStorage) 이력 기준으로 필터링
+        setRatedFaceIds(Array.from(new Set(loadDeviceRatedFaceIds())))
+      }
       setSyncError(null)
       setIsLoading(false)
     }
