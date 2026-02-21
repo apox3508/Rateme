@@ -432,6 +432,7 @@ function App() {
       : pendingWrites > 0
         ? '저장 중'
         : ''
+  const isSignupMode = authMode === 'signup'
 
   if (!hasSupabaseConfig) {
     return (
@@ -471,85 +472,66 @@ function App() {
       </section>
       <p className="description">별점을 누르는 순간, 다음 랜덤 사진으로 바로 넘어갑니다. 당신의 점수는 실시간으로 모두에게 공유됩니다.</p>
       {(showAuthPanel || isAuthPanelClosing) && !session && (
-        <section className={`auth-card ${isAuthPanelClosing ? 'auth-card-exit' : 'auth-card-enter'}`}>
-          <div className="auth-mode-tabs" role="tablist" aria-label="인증 모드">
+        <section
+          className={`auth-card ${isSignupMode ? 'signup' : 'signin'} ${isAuthPanelClosing ? 'auth-card-exit' : 'auth-card-enter'}`}
+        >
+          <div key={authMode} className="auth-mode-content">
+            <h2>{authMode === 'signin' ? '로그인' : '회원가입'}</h2>
+            <p className="auth-mode-hint">
+              {isSignupMode
+                ? '새 계정을 만들고 바로 평가를 시작하세요.'
+                : '기존 계정으로 로그인해서 내 평가 이력을 이어가세요.'}
+            </p>
+            <form className="auth-form" onSubmit={handleAuthSubmit}>
+              <label htmlFor="email">이메일</label>
+              <input
+                id="email"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                autoComplete="email"
+                required
+              />
+              <label htmlFor="password">비밀번호</label>
+              <input
+                id="password"
+                type="password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                autoComplete={authMode === 'signin' ? 'current-password' : 'new-password'}
+                minLength={6}
+                required
+              />
+              {authMode === 'signup' && (
+                <>
+                  <label htmlFor="confirm-password">비밀번호 확인</label>
+                  <input
+                    id="confirm-password"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(event) => setConfirmPassword(event.target.value)}
+                    autoComplete="new-password"
+                    minLength={6}
+                    required
+                  />
+                </>
+              )}
+              <button type="submit" className={`auth-submit ${isSignupMode ? 'signup' : 'signin'}`}>
+                {authMode === 'signin' ? '로그인' : '회원가입'}
+              </button>
+            </form>
             <button
               type="button"
-              role="tab"
-              aria-selected={authMode === 'signin'}
-              className={`auth-mode-tab ${authMode === 'signin' ? 'active' : ''}`}
+              className="auth-switch"
               onClick={() => {
-                setAuthMode('signin')
+                setAuthMode((prev) => (prev === 'signin' ? 'signup' : 'signin'))
                 setAuthError(null)
                 setAuthNotice(null)
               }}
             >
-              로그인
-            </button>
-            <button
-              type="button"
-              role="tab"
-              aria-selected={authMode === 'signup'}
-              className={`auth-mode-tab ${authMode === 'signup' ? 'active' : ''}`}
-              onClick={() => {
-                setAuthMode('signup')
-                setAuthError(null)
-                setAuthNotice(null)
-              }}
-            >
-              회원가입
+              {authMode === 'signin' ? '계정이 없나요? 회원가입 화면으로 전환' : '이미 계정이 있나요? 로그인 화면으로 전환'}
             </button>
           </div>
-          <h2>{authMode === 'signin' ? '로그인' : '회원가입'}</h2>
-          <form className="auth-form" onSubmit={handleAuthSubmit}>
-            <label htmlFor="email">이메일</label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              autoComplete="email"
-              required
-            />
-            <label htmlFor="password">비밀번호</label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              autoComplete={authMode === 'signin' ? 'current-password' : 'new-password'}
-              minLength={6}
-              required
-            />
-            {authMode === 'signup' && (
-              <>
-                <label htmlFor="confirm-password">비밀번호 확인</label>
-                <input
-                  id="confirm-password"
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(event) => setConfirmPassword(event.target.value)}
-                  autoComplete="new-password"
-                  minLength={6}
-                  required
-                />
-              </>
-            )}
-            <button type="submit" className="auth-submit">
-              {authMode === 'signin' ? '로그인' : '회원가입'}
-            </button>
-          </form>
-          <button
-            type="button"
-            className="auth-switch"
-            onClick={() => {
-              setAuthMode((prev) => (prev === 'signin' ? 'signup' : 'signin'))
-              setAuthError(null)
-              setAuthNotice(null)
-            }}
-          >
-            {authMode === 'signin' ? '계정이 없나요? 회원가입' : '이미 계정이 있나요? 로그인'}
-          </button>
           {authNotice && <p className="auth-notice">{authNotice}</p>}
           {authError && <p className="sync-error">{authError}</p>}
         </section>
