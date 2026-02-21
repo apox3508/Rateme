@@ -879,7 +879,8 @@ function App() {
         ? t('sync_saving')
         : ''
   const isSignupMode = authMode === 'signup'
-  const isOverlayOpen = showMyPage || showAuthPanel || isAuthPanelClosing
+  const isAuthOverlayOpen = !session && (showAuthPanel || isAuthPanelClosing)
+  const isOverlayOpen = showMyPage || isAuthOverlayOpen
 
   if (!hasSupabaseConfig) {
     return (
