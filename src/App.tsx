@@ -879,6 +879,7 @@ function App() {
         ? t('sync_saving')
         : ''
   const isSignupMode = authMode === 'signup'
+  const isOverlayOpen = showMyPage || showAuthPanel || isAuthPanelClosing
 
   if (!hasSupabaseConfig) {
     return (
@@ -1080,85 +1081,89 @@ function App() {
           {mypageError && <p className="sync-error">{mypageError}</p>}
         </section>
       )}
-      {syncLabel && <p className={`sync-status ${syncError ? 'error' : ''}`}>{syncLabel}</p>}
-
-      {isLoading && <p className="sync-error">{t('loading_data')}</p>}
-
-      {!isLoading && !currentPerson && !isAllRated && <p className="sync-error">{t('no_approved_faces')}</p>}
-
-      {isAllRated && (
-        <section className="summary">
-          <h3>{t('done_title')}</h3>
-          <p>{t('done_desc')}</p>
-        </section>
-      )}
-
-      {currentPerson && (
+      {!isOverlayOpen && (
         <>
-          <section className="hero">
-            <img src={currentPerson.image} alt={`${currentPerson.name} portrait`} />
-            <div className="hero-overlay">
-              <p>{currentPerson.title}</p>
-              <h2>{currentPerson.name}</h2>
-            </div>
-          </section>
+          {syncLabel && <p className={`sync-status ${syncError ? 'error' : ''}`}>{syncLabel}</p>}
 
-          <section className="score-box">
-            <p className="score-label">{t('score_label')}</p>
-            <p className="score-number" aria-label={t('score_avg_aria', { avg: currentAverage.toFixed(2) })}>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <ScoreStar
-                  key={star}
-                  fillRatio={Math.max(0, Math.min(1, currentAverage - (star - 1)))}
-                  srText={t('score_star_sr', { index: star })}
-                />
-              ))}
+          {isLoading && <p className="sync-error">{t('loading_data')}</p>}
+
+          {!isLoading && !currentPerson && !isAllRated && <p className="sync-error">{t('no_approved_faces')}</p>}
+
+          {isAllRated && (
+            <section className="summary">
+              <h3>{t('done_title')}</h3>
+              <p>{t('done_desc')}</p>
+            </section>
+          )}
+
+          {currentPerson && (
+            <>
+              <section className="hero">
+                <img src={currentPerson.image} alt={`${currentPerson.name} portrait`} />
+                <div className="hero-overlay">
+                  <p>{currentPerson.title}</p>
+                  <h2>{currentPerson.name}</h2>
+                </div>
+              </section>
+
+              <section className="score-box">
+                <p className="score-label">{t('score_label')}</p>
+                <p className="score-number" aria-label={t('score_avg_aria', { avg: currentAverage.toFixed(2) })}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <ScoreStar
+                      key={star}
+                      fillRatio={Math.max(0, Math.min(1, currentAverage - (star - 1)))}
+                      srText={t('score_star_sr', { index: star })}
+                    />
+                  ))}
+                </p>
+                <p className="score-sub">{t('score_count', { count: currentScore.count })}</p>
+
+                <div className="stars" onMouseLeave={() => setHoverStars(0)}>
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      className={`star ${hoverStars >= star ? 'filled' : ''}`}
+                      onMouseEnter={() => setHoverStars(star)}
+                      onClick={() => {
+                        void handleRating(star)
+                      }}
+                      aria-label={t('rating_aria', { star })}
+                    >
+                      <span className="rate-star-figure" aria-hidden="true">
+                        <img
+                          className="rate-star-icon-image empty"
+                          src={REFERENCE_STAR_URL}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                        />
+                        <img
+                          className="rate-star-icon-image filled"
+                          src={REFERENCE_STAR_URL}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </span>
+                    </button>
+                  ))}
+                </div>
+
+                <p className="hint">{t('score_hint')}</p>
+              </section>
+            </>
+          )}
+
+          <section className="summary">
+            <p className="last-vote">
+              {lastVote ? t('last_vote', { name: lastVote.personName, rating: `${lastVote.rating}` }) : t('last_vote_none')}
             </p>
-            <p className="score-sub">{t('score_count', { count: currentScore.count })}</p>
-
-            <div className="stars" onMouseLeave={() => setHoverStars(0)}>
-              {[1, 2, 3, 4, 5].map((star) => (
-                <button
-                  key={star}
-                  type="button"
-                  className={`star ${hoverStars >= star ? 'filled' : ''}`}
-                  onMouseEnter={() => setHoverStars(star)}
-                  onClick={() => {
-                    void handleRating(star)
-                  }}
-                  aria-label={t('rating_aria', { star })}
-                >
-                  <span className="rate-star-figure" aria-hidden="true">
-                    <img
-                      className="rate-star-icon-image empty"
-                      src={REFERENCE_STAR_URL}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                    />
-                    <img
-                      className="rate-star-icon-image filled"
-                      src={REFERENCE_STAR_URL}
-                      alt=""
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  </span>
-                </button>
-              ))}
-            </div>
-
-            <p className="hint">{t('score_hint')}</p>
+            {syncError && <p className="sync-error">{syncError}</p>}
           </section>
         </>
       )}
-
-      <section className="summary">
-        <p className="last-vote">
-          {lastVote ? t('last_vote', { name: lastVote.personName, rating: `${lastVote.rating}` }) : t('last_vote_none')}
-        </p>
-        {syncError && <p className="sync-error">{syncError}</p>}
-      </section>
     </main>
   )
 }
