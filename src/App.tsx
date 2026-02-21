@@ -28,7 +28,7 @@ type RatingRow = {
   score: number
 }
 
-const RATED_FACE_IDS_STORAGE_KEY_PREFIX = 'rateme_rated_face_ids'
+const ANON_RATED_FACE_IDS_STORAGE_KEY = 'rateme_rated_face_ids_anon'
 const REFERENCE_STAR_URL =
   'https://ik.imagekit.io/rat3me/New%20Folder/pngtree-three-dimensional-golden-star-with-sharp-points-and-a-smooth-surface-png-image_16474576.png'
 
@@ -77,18 +77,16 @@ function aggregateScores(faces: Person[], ratings: RatingRow[]) {
   return nextScores
 }
 
-function loadRatedFaceIds(storageKey: string) {
+function loadAnonRatedFaceIds() {
   try {
-    const raw = localStorage.getItem(storageKey)
+    const raw = localStorage.getItem(ANON_RATED_FACE_IDS_STORAGE_KEY)
     if (!raw) {
       return []
     }
-
     const parsed = JSON.parse(raw) as unknown
     if (!Array.isArray(parsed)) {
       return []
     }
-
     return parsed.filter((value): value is number => typeof value === 'number')
   } catch {
     return []
@@ -129,12 +127,7 @@ function App() {
   const [syncError, setSyncError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [pendingWrites, setPendingWrites] = useState(0)
-  const [ratedFaceIds, setRatedFaceIds] = useState<number[]>([])
-
-  const ratedFaceIdsStorageKey = useMemo(
-    () => `${RATED_FACE_IDS_STORAGE_KEY_PREFIX}_${session?.user.id ?? 'guest'}`,
-    [session?.user.id],
-  )
+  const [ratedFaceIds, setRatedFaceIds] = useState<number[]>(() => loadAnonRatedFaceIds())
 
   const ratedFaceIdsSet = useMemo(() => new Set(ratedFaceIds), [ratedFaceIds])
   const unratedPeople = useMemo(
@@ -146,14 +139,6 @@ function App() {
   const currentPerson = unratedPeople.find((person) => person.id === currentId) ?? null
   const currentScore = currentPerson ? scores[currentPerson.id] ?? { total: 0, count: 0 } : { total: 0, count: 0 }
   const currentAverage = currentScore.count ? currentScore.total / currentScore.count : 0
-
-  useEffect(() => {
-    setRatedFaceIds(loadRatedFaceIds(ratedFaceIdsStorageKey))
-  }, [ratedFaceIdsStorageKey])
-
-  useEffect(() => {
-    localStorage.setItem(ratedFaceIdsStorageKey, JSON.stringify(ratedFaceIds))
-  }, [ratedFaceIds, ratedFaceIdsStorageKey])
 
   useEffect(() => {
     if (unratedPeople.length === 0) {
@@ -198,6 +183,18 @@ function App() {
   }, [])
 
   useEffect(() => {
+    if (!session) {
+      setRatedFaceIds(loadAnonRatedFaceIds())
+    }
+  }, [session])
+
+  useEffect(() => {
+    if (!session) {
+      localStorage.setItem(ANON_RATED_FACE_IDS_STORAGE_KEY, JSON.stringify(ratedFaceIds))
+    }
+  }, [session, ratedFaceIds])
+
+  useEffect(() => {
     if (!supabase || !hasSupabaseConfig) {
       setSyncError(`Supabase 설정 누락: ${missingSupabaseKeys.join(', ')}`)
       setIsLoading(false)
@@ -209,9 +206,12 @@ function App() {
     let isCancelled = false
 
     const refreshFromDb = async () => {
-      const [facesResult, ratingsResult] = await Promise.all([
+      const [facesResult, ratingsResult, myRatingsResult] = await Promise.all([
         client.from('faces').select('id,name,title,image_url').eq('status', 'approved'),
         client.from('ratings').select('face_id,score'),
+        session
+          ? client.from('ratings').select('face_id').eq('user_id', session.user.id)
+          : Promise.resolve({ data: loadAnonRatedFaceIds().map((face_id) => ({ face_id })), error: null }),
       ])
 
       if (isCancelled) {
@@ -229,12 +229,20 @@ function App() {
         setIsLoading(false)
         return
       }
+      if (myRatingsResult.error) {
+        setSyncError('내 평가 기록 조회 실패: ratings SELECT 정책을 확인해 주세요.')
+        setIsLoading(false)
+        return
+      }
 
       const nextPeople = toPersonRows((facesResult.data ?? []) as FaceRow[])
       const nextScores = aggregateScores(nextPeople, (ratingsResult.data ?? []) as RatingRow[])
 
       setPeople(nextPeople)
       setScores(nextScores)
+      setRatedFaceIds(
+        Array.from(new Set(((myRatingsResult.data ?? []) as Array<{ face_id: number }>).map((row) => row.face_id))),
+      )
       setSyncError(null)
       setIsLoading(false)
     }
@@ -263,7 +271,7 @@ function App() {
       isCancelled = true
       void client.removeChannel(channel)
     }
-  }, [])
+  }, [session])
 
   const handleAuthSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -389,7 +397,8 @@ function App() {
 
   return (
     <main className="app-shell">
-      <section className="top-actions">
+      <section className="top-row">
+        <p className="eyebrow">RATEME</p>
         {!session ? (
           <button
             type="button"
@@ -408,12 +417,10 @@ function App() {
           </button>
         )}
       </section>
-      <p className="eyebrow">RATEME</p>
       <p className="description">별점을 누르는 순간, 다음 랜덤 사진으로 바로 넘어갑니다. 당신의 점수는 실시간으로 모두에게 공유됩니다.</p>
       {showAuthPanel && !session && (
-        <section className="auth-card">
+        <section className="auth-card auth-card-enter">
           <h2>{authMode === 'signin' ? '로그인' : '회원가입'}</h2>
-          <p className="description">Supabase Auth(email/password) 기반 인증입니다.</p>
           <form className="auth-form" onSubmit={handleAuthSubmit}>
             <label htmlFor="email">이메일</label>
             <input

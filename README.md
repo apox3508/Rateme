@@ -24,6 +24,17 @@ Supabase Dashboard -> Authentication -> Providers 에서 `Email` provider를 켭
 - Email Confirm ON: 회원가입 후 메일 인증 뒤 로그인 가능
 - Email Confirm OFF: 회원가입 직후 세션 즉시 생성
 
+## 부정 평가 방지(필수)
+
+중복 평가 차단은 브라우저 저장소가 아니라 DB에서 막아야 합니다.
+
+1. `supabase/migrations/20260221_prevent_duplicate_ratings.sql` 실행
+2. 비로그인 평가도 허용하려면 `supabase/migrations/20260221_allow_anonymous_rating_insert.sql` 실행
+3. 핵심 적용 내용:
+   - `ratings.user_id` 컬럼 추가(`auth.users` FK, 기본값 `auth.uid()`)
+   - `(user_id, face_id)` 유니크 인덱스 추가
+   - `ratings` INSERT 정책을 인증 사용자 본인만 가능하도록 강제
+
 ### GitHub Pages deploy secrets
 
 For deploy builds, add these repository secrets:
