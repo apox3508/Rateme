@@ -61,6 +61,25 @@ const messages: Record<Locale, Record<string, string>> = {
     auth_switch_to_signin: 'Already have an account? Switch to Log In',
     auth_google: 'Continue with Google',
     auth_or_email: 'or continue with email',
+    mypage_open: 'My Page',
+    mypage_title: 'My Page',
+    mypage_email: 'Email',
+    mypage_user_id: 'User ID',
+    mypage_created_at: 'Created At',
+    mypage_password_title: 'Change Password',
+    mypage_new_password: 'New Password',
+    mypage_confirm_password: 'Confirm New Password',
+    mypage_update_password: 'Update Password',
+    mypage_password_updated: 'Password updated successfully.',
+    mypage_delete_title: 'Delete Account',
+    mypage_delete_hint: 'Type DELETE to permanently remove your account.',
+    mypage_delete_label: 'Type DELETE',
+    mypage_delete_button: 'Delete Account',
+    mypage_close: 'Close',
+    mypage_password_mismatch: 'New password confirmation does not match.',
+    mypage_delete_word_mismatch: 'Please type DELETE exactly.',
+    mypage_update_failed: 'Failed to update password. Please try again.',
+    mypage_delete_failed: 'Failed to delete account. Please try again.',
     sync_local: 'Local mode',
     sync_error: 'Connection error',
     sync_saving: 'Saving',
@@ -105,6 +124,25 @@ const messages: Record<Locale, Record<string, string>> = {
     auth_switch_to_signin: '이미 계정이 있나요? 로그인 화면으로 전환',
     auth_google: 'Google로 계속하기',
     auth_or_email: '또는 이메일로 계속하기',
+    mypage_open: '마이페이지',
+    mypage_title: '마이페이지',
+    mypage_email: '이메일',
+    mypage_user_id: '유저 ID',
+    mypage_created_at: '가입일',
+    mypage_password_title: '비밀번호 변경',
+    mypage_new_password: '새 비밀번호',
+    mypage_confirm_password: '새 비밀번호 확인',
+    mypage_update_password: '비밀번호 변경',
+    mypage_password_updated: '비밀번호가 변경되었습니다.',
+    mypage_delete_title: '회원 탈퇴',
+    mypage_delete_hint: '계정을 영구 삭제하려면 DELETE를 입력하세요.',
+    mypage_delete_label: 'DELETE 입력',
+    mypage_delete_button: '회원 탈퇴',
+    mypage_close: '닫기',
+    mypage_password_mismatch: '새 비밀번호 확인이 일치하지 않습니다.',
+    mypage_delete_word_mismatch: 'DELETE를 정확히 입력해 주세요.',
+    mypage_update_failed: '비밀번호 변경 실패: 잠시 후 다시 시도해 주세요.',
+    mypage_delete_failed: '회원 탈퇴 실패: 잠시 후 다시 시도해 주세요.',
     sync_local: '로컬 모드',
     sync_error: '연결 오류',
     sync_saving: '저장 중',
@@ -149,6 +187,25 @@ const messages: Record<Locale, Record<string, string>> = {
     auth_switch_to_signin: '¿Ya tienes cuenta? Cambiar a inicio de sesión',
     auth_google: 'Continuar con Google',
     auth_or_email: 'o continuar con correo',
+    mypage_open: 'Mi perfil',
+    mypage_title: 'Mi perfil',
+    mypage_email: 'Correo',
+    mypage_user_id: 'ID de usuario',
+    mypage_created_at: 'Creado el',
+    mypage_password_title: 'Cambiar contraseña',
+    mypage_new_password: 'Nueva contraseña',
+    mypage_confirm_password: 'Confirmar nueva contraseña',
+    mypage_update_password: 'Actualizar contraseña',
+    mypage_password_updated: 'Contraseña actualizada.',
+    mypage_delete_title: 'Eliminar cuenta',
+    mypage_delete_hint: 'Escribe DELETE para eliminar tu cuenta permanentemente.',
+    mypage_delete_label: 'Escribe DELETE',
+    mypage_delete_button: 'Eliminar cuenta',
+    mypage_close: 'Cerrar',
+    mypage_password_mismatch: 'La confirmación de la nueva contraseña no coincide.',
+    mypage_delete_word_mismatch: 'Escribe DELETE exactamente.',
+    mypage_update_failed: 'No se pudo actualizar la contraseña.',
+    mypage_delete_failed: 'No se pudo eliminar la cuenta.',
     sync_local: 'Modo local',
     sync_error: 'Error de conexión',
     sync_saving: 'Guardando',
@@ -193,6 +250,25 @@ const messages: Record<Locale, Record<string, string>> = {
     auth_switch_to_signin: 'アカウントをお持ちですか？ ログインへ',
     auth_google: 'Googleで続行',
     auth_or_email: 'またはメールで続行',
+    mypage_open: 'マイページ',
+    mypage_title: 'マイページ',
+    mypage_email: 'メール',
+    mypage_user_id: 'ユーザーID',
+    mypage_created_at: '登録日時',
+    mypage_password_title: 'パスワード変更',
+    mypage_new_password: '新しいパスワード',
+    mypage_confirm_password: '新しいパスワード確認',
+    mypage_update_password: 'パスワード変更',
+    mypage_password_updated: 'パスワードを変更しました。',
+    mypage_delete_title: 'アカウント削除',
+    mypage_delete_hint: 'DELETE と入力するとアカウントが完全に削除されます。',
+    mypage_delete_label: 'DELETE を入力',
+    mypage_delete_button: 'アカウント削除',
+    mypage_close: '閉じる',
+    mypage_password_mismatch: '新しいパスワード確認が一致しません。',
+    mypage_delete_word_mismatch: 'DELETE を正確に入力してください。',
+    mypage_update_failed: 'パスワード変更に失敗しました。',
+    mypage_delete_failed: 'アカウント削除に失敗しました。',
     sync_local: 'ローカルモード',
     sync_error: '接続エラー',
     sync_saving: '保存中',
@@ -237,6 +313,25 @@ const messages: Record<Locale, Record<string, string>> = {
     auth_switch_to_signin: 'Déjà un compte ? Passer à la connexion',
     auth_google: 'Continuer avec Google',
     auth_or_email: 'ou continuer avec e-mail',
+    mypage_open: 'Mon compte',
+    mypage_title: 'Mon compte',
+    mypage_email: 'E-mail',
+    mypage_user_id: 'ID utilisateur',
+    mypage_created_at: 'Créé le',
+    mypage_password_title: 'Changer le mot de passe',
+    mypage_new_password: 'Nouveau mot de passe',
+    mypage_confirm_password: 'Confirmer le nouveau mot de passe',
+    mypage_update_password: 'Mettre à jour',
+    mypage_password_updated: 'Mot de passe mis à jour.',
+    mypage_delete_title: 'Supprimer le compte',
+    mypage_delete_hint: 'Tapez DELETE pour supprimer définitivement votre compte.',
+    mypage_delete_label: 'Tapez DELETE',
+    mypage_delete_button: 'Supprimer le compte',
+    mypage_close: 'Fermer',
+    mypage_password_mismatch: 'La confirmation du nouveau mot de passe ne correspond pas.',
+    mypage_delete_word_mismatch: 'Veuillez saisir DELETE exactement.',
+    mypage_update_failed: 'Échec de mise à jour du mot de passe.',
+    mypage_delete_failed: 'Échec de suppression du compte.',
     sync_local: 'Mode local',
     sync_error: 'Erreur de connexion',
     sync_saving: 'Enregistrement',
@@ -386,12 +481,19 @@ function App() {
   const [session, setSession] = useState<Session | null>(null)
   const [showAuthPanel, setShowAuthPanel] = useState(false)
   const [isAuthPanelClosing, setIsAuthPanelClosing] = useState(false)
+  const [showMyPage, setShowMyPage] = useState(false)
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [authError, setAuthError] = useState<string | null>(null)
   const [authNotice, setAuthNotice] = useState<string | null>(null)
+  const [mypageError, setMypageError] = useState<string | null>(null)
+  const [mypageNotice, setMypageNotice] = useState<string | null>(null)
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmNewPassword, setConfirmNewPassword] = useState('')
+  const [deleteConfirmText, setDeleteConfirmText] = useState('')
+  const [isMypageBusy, setIsMypageBusy] = useState(false)
   const [people, setPeople] = useState<Person[]>([])
   const [currentId, setCurrentId] = useState<number | null>(null)
   const [scores, setScores] = useState<Record<number, Score>>({})
@@ -413,6 +515,7 @@ function App() {
   const currentPerson = unratedPeople.find((person) => person.id === currentId) ?? null
   const currentScore = currentPerson ? scores[currentPerson.id] ?? { total: 0, count: 0 } : { total: 0, count: 0 }
   const currentAverage = currentScore.count ? currentScore.total / currentScore.count : 0
+  const createdAtLabel = session?.user.created_at ? new Date(session.user.created_at).toLocaleString(locale) : '-'
   const t = (key: string, vars?: Record<string, string | number>) => {
     const template = messages[locale][key] ?? messages.en[key] ?? key
     if (!vars) {
@@ -672,6 +775,65 @@ function App() {
     }
   }
 
+  const handlePasswordUpdate = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!supabase || !session) {
+      return
+    }
+
+    setMypageError(null)
+    setMypageNotice(null)
+
+    if (newPassword.length < 6) {
+      setMypageError(t('auth_password_len'))
+      return
+    }
+
+    if (newPassword !== confirmNewPassword) {
+      setMypageError(t('mypage_password_mismatch'))
+      return
+    }
+
+    setIsMypageBusy(true)
+    const { error } = await supabase.auth.updateUser({ password: newPassword })
+    setIsMypageBusy(false)
+
+    if (error) {
+      setMypageError(t('mypage_update_failed'))
+      return
+    }
+
+    setNewPassword('')
+    setConfirmNewPassword('')
+    setMypageNotice(t('mypage_password_updated'))
+  }
+
+  const handleDeleteAccount = async () => {
+    if (!supabase || !session) {
+      return
+    }
+
+    setMypageError(null)
+    setMypageNotice(null)
+
+    if (deleteConfirmText.trim() !== 'DELETE') {
+      setMypageError(t('mypage_delete_word_mismatch'))
+      return
+    }
+
+    setIsMypageBusy(true)
+    const { error } = await supabase.rpc('delete_my_account')
+    setIsMypageBusy(false)
+
+    if (error) {
+      setMypageError(t('mypage_delete_failed'))
+      return
+    }
+
+    await supabase.auth.signOut()
+    setShowMyPage(false)
+  }
+
   const handleRating = async (rating: number) => {
     if (!supabase || !currentPerson) {
       return
@@ -765,9 +927,22 @@ function App() {
               {t('login')}
             </button>
           ) : (
-            <button type="button" className="login-mini logout" onClick={() => void handleSignOut()}>
-              {t('logout')}
-            </button>
+            <>
+              <button
+                type="button"
+                className="login-mini profile"
+                onClick={() => {
+                  setShowMyPage((prev) => !prev)
+                  setMypageError(null)
+                  setMypageNotice(null)
+                }}
+              >
+                {t('mypage_open')}
+              </button>
+              <button type="button" className="login-mini logout" onClick={() => void handleSignOut()}>
+                {t('logout')}
+              </button>
+            </>
           )}
         </div>
       </section>
@@ -842,6 +1017,74 @@ function App() {
           </div>
           {authNotice && <p className="auth-notice">{authNotice}</p>}
           {authError && <p className="sync-error">{authError}</p>}
+        </section>
+      )}
+      {showMyPage && session && (
+        <section className="mypage-card">
+          <h2>{t('mypage_title')}</h2>
+          <p className="mypage-meta">
+            <strong>{t('mypage_email')}:</strong> {session.user.email ?? '-'}
+          </p>
+          <p className="mypage-meta">
+            <strong>{t('mypage_user_id')}:</strong> {session.user.id}
+          </p>
+          <p className="mypage-meta">
+            <strong>{t('mypage_created_at')}:</strong> {createdAtLabel}
+          </p>
+
+          <form className="mypage-form" onSubmit={handlePasswordUpdate}>
+            <h3>{t('mypage_password_title')}</h3>
+            <label htmlFor="mypage-new-password">{t('mypage_new_password')}</label>
+            <input
+              id="mypage-new-password"
+              type="password"
+              value={newPassword}
+              onChange={(event) => setNewPassword(event.target.value)}
+              autoComplete="new-password"
+              minLength={6}
+              required
+            />
+            <label htmlFor="mypage-confirm-new-password">{t('mypage_confirm_password')}</label>
+            <input
+              id="mypage-confirm-new-password"
+              type="password"
+              value={confirmNewPassword}
+              onChange={(event) => setConfirmNewPassword(event.target.value)}
+              autoComplete="new-password"
+              minLength={6}
+              required
+            />
+            <button type="submit" className="mypage-action" disabled={isMypageBusy}>
+              {t('mypage_update_password')}
+            </button>
+          </form>
+
+          <section className="mypage-danger">
+            <h3>{t('mypage_delete_title')}</h3>
+            <p>{t('mypage_delete_hint')}</p>
+            <label htmlFor="mypage-delete-confirm">{t('mypage_delete_label')}</label>
+            <input
+              id="mypage-delete-confirm"
+              type="text"
+              value={deleteConfirmText}
+              onChange={(event) => setDeleteConfirmText(event.target.value)}
+              autoComplete="off"
+            />
+            <button
+              type="button"
+              className="mypage-danger-btn"
+              disabled={isMypageBusy}
+              onClick={() => void handleDeleteAccount()}
+            >
+              {t('mypage_delete_button')}
+            </button>
+          </section>
+
+          <button type="button" className="auth-switch" onClick={() => setShowMyPage(false)}>
+            {t('mypage_close')}
+          </button>
+          {mypageNotice && <p className="auth-notice">{mypageNotice}</p>}
+          {mypageError && <p className="sync-error">{mypageError}</p>}
         </section>
       )}
       {syncLabel && <p className={`sync-status ${syncError ? 'error' : ''}`}>{syncLabel}</p>}
