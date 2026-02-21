@@ -515,7 +515,6 @@ function App() {
   const currentPerson = unratedPeople.find((person) => person.id === currentId) ?? null
   const currentScore = currentPerson ? scores[currentPerson.id] ?? { total: 0, count: 0 } : { total: 0, count: 0 }
   const currentAverage = currentScore.count ? currentScore.total / currentScore.count : 0
-  const createdAtLabel = session?.user.created_at ? new Date(session.user.created_at).toLocaleString(locale) : '-'
   const t = (key: string, vars?: Record<string, string | number>) => {
     const template = messages[locale][key] ?? messages.en[key] ?? key
     if (!vars) {
@@ -1024,12 +1023,6 @@ function App() {
           <h2>{t('mypage_title')}</h2>
           <p className="mypage-meta">
             <strong>{t('mypage_email')}:</strong> {session.user.email ?? '-'}
-          </p>
-          <p className="mypage-meta">
-            <strong>{t('mypage_user_id')}:</strong> {session.user.id}
-          </p>
-          <p className="mypage-meta">
-            <strong>{t('mypage_created_at')}:</strong> {createdAtLabel}
           </p>
 
           <form className="mypage-form" onSubmit={handlePasswordUpdate}>
