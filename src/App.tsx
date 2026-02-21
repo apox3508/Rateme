@@ -848,7 +848,22 @@ function App() {
                   }}
                   aria-label={t('rating_aria', { star })}
                 >
-                  ★
+                  <span className="rate-star-figure" aria-hidden="true">
+                    <img
+                      className="rate-star-icon-image empty"
+                      src={REFERENCE_STAR_URL}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <img
+                      className="rate-star-icon-image filled"
+                      src={REFERENCE_STAR_URL}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </span>
                 </button>
               ))}
             </div>

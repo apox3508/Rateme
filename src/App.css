@@ -452,13 +452,13 @@ h1 {
   border: 1px solid rgba(203, 213, 225, 0.7);
   border-radius: 999px;
   background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-  font-size: 1.35rem;
-  line-height: 1;
-  color: #cbd5e1;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   transition:
     transform 130ms ease,
-    color 130ms ease,
     background 130ms ease,
     border-color 130ms ease,
     box-shadow 130ms ease;
@@ -479,12 +479,52 @@ h1 {
 }
 
 .star.filled {
-  color: #fff8dc;
   border-color: rgba(245, 158, 11, 0.72);
   background: linear-gradient(180deg, #fcd34d 0%, #f59e0b 100%);
   box-shadow:
     0 8px 18px rgba(217, 119, 6, 0.28),
     inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+.rate-star-figure {
+  position: relative;
+  width: 1.35rem;
+  height: 1.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rate-star-icon-image {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+.rate-star-icon-image.empty {
+  opacity: 0.36;
+  filter: grayscale(1) saturate(0) brightness(1.12);
+}
+
+.star.filled .rate-star-icon-image.empty {
+  opacity: 0.12;
+}
+
+.rate-star-icon-image.filled {
+  opacity: 0;
+  filter:
+    saturate(1.06)
+    contrast(1.03)
+    drop-shadow(0 1px 0 rgba(255, 255, 255, 0.34))
+    drop-shadow(0 4px 8px rgba(180, 83, 9, 0.24));
+  transition: opacity 120ms ease;
+}
+
+.star.filled .rate-star-icon-image.filled {
+  opacity: 1;
 }
 
 .summary h3 {
