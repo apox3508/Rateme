@@ -715,7 +715,7 @@ function App() {
           {!session ? (
             <button
               type="button"
-              className="login-mini"
+              className="login-mini login"
               onClick={() => {
                 if (showAuthPanel) {
                   closeAuthPanel()
@@ -730,7 +730,7 @@ function App() {
               {t('login')}
             </button>
           ) : (
-            <button type="button" className="login-mini" onClick={() => void handleSignOut()}>
+            <button type="button" className="login-mini logout" onClick={() => void handleSignOut()}>
               {t('logout')}
             </button>
           )}
