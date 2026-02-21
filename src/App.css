@@ -12,39 +12,24 @@
   gap: 0.85rem;
 }
 
-.auth-shell {
-  max-width: 520px;
-}
-
-.session-bar {
+.top-actions {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.7rem;
-  border-radius: 14px;
-  padding: 0.6rem 0.8rem;
-  background: rgba(255, 255, 255, 0.78);
-  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.1);
+  justify-content: flex-end;
 }
 
-.session-bar p {
-  margin: 0;
-  color: #334155;
-  font-size: 0.9rem;
-}
-
-.signout-button {
-  border: 1px solid rgba(185, 28, 28, 0.22);
-  background: #fff1f2;
+.login-mini {
+  border: 1px solid rgba(15, 23, 42, 0.18);
+  background: rgba(255, 255, 255, 0.92);
   color: #9f1239;
   border-radius: 999px;
-  padding: 0.28rem 0.75rem;
+  padding: 0.2rem 0.65rem;
+  font-size: 0.78rem;
   font-weight: 700;
   cursor: pointer;
 }
 
-.signout-button:hover {
-  background: #ffe4e6;
+.login-mini:hover {
+  background: #fff1f2;
 }
 
 .auth-card {

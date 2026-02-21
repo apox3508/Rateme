@@ -115,7 +115,7 @@ function ScoreStar({ fillRatio, index }: { fillRatio: number; index: number }) {
 
 function App() {
   const [session, setSession] = useState<Session | null>(null)
-  const [isAuthLoading, setIsAuthLoading] = useState(true)
+  const [showAuthPanel, setShowAuthPanel] = useState(false)
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -148,21 +148,12 @@ function App() {
   const currentAverage = currentScore.count ? currentScore.total / currentScore.count : 0
 
   useEffect(() => {
-    if (!session) {
-      setRatedFaceIds([])
-      return
-    }
-
     setRatedFaceIds(loadRatedFaceIds(ratedFaceIdsStorageKey))
-  }, [session, ratedFaceIdsStorageKey])
+  }, [ratedFaceIdsStorageKey])
 
   useEffect(() => {
-    if (!session) {
-      return
-    }
-
     localStorage.setItem(ratedFaceIdsStorageKey, JSON.stringify(ratedFaceIds))
-  }, [ratedFaceIds, ratedFaceIdsStorageKey, session])
+  }, [ratedFaceIds, ratedFaceIdsStorageKey])
 
   useEffect(() => {
     if (unratedPeople.length === 0) {
@@ -177,7 +168,6 @@ function App() {
 
   useEffect(() => {
     if (!supabase || !hasSupabaseConfig) {
-      setIsAuthLoading(false)
       return
     }
 
@@ -192,7 +182,6 @@ function App() {
         setSession(data.session)
       }
 
-      setIsAuthLoading(false)
     }
 
     void initializeSession()
@@ -212,16 +201,6 @@ function App() {
     if (!supabase || !hasSupabaseConfig) {
       setSyncError(`Supabase 설정 누락: ${missingSupabaseKeys.join(', ')}`)
       setIsLoading(false)
-      return
-    }
-
-    if (!session) {
-      setIsLoading(false)
-      setPeople([])
-      setScores({})
-      setCurrentId(null)
-      setLastVote(null)
-      setSyncError(null)
       return
     }
 
@@ -284,7 +263,7 @@ function App() {
       isCancelled = true
       void client.removeChannel(channel)
     }
-  }, [session])
+  }, [])
 
   const handleAuthSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -323,6 +302,7 @@ function App() {
         setAuthNotice('회원가입 완료. 이메일 인증 후 로그인해 주세요.')
       } else {
         setAuthNotice('회원가입 및 로그인 완료.')
+        setShowAuthPanel(false)
       }
 
       return
@@ -339,6 +319,7 @@ function App() {
     }
 
     setPassword('')
+    setShowAuthPanel(false)
   }
 
   const handleSignOut = async () => {
@@ -406,19 +387,30 @@ function App() {
     )
   }
 
-  if (isAuthLoading) {
-    return (
-      <main className="app-shell">
-        <p className="eyebrow">RATEME</p>
-        <p className="description">인증 상태 확인 중...</p>
-      </main>
-    )
-  }
-
-  if (!session) {
-    return (
-      <main className="app-shell auth-shell">
-        <p className="eyebrow">RATEME</p>
+  return (
+    <main className="app-shell">
+      <section className="top-actions">
+        {!session ? (
+          <button
+            type="button"
+            className="login-mini"
+            onClick={() => {
+              setShowAuthPanel((prev) => !prev)
+              setAuthError(null)
+              setAuthNotice(null)
+            }}
+          >
+            로그인
+          </button>
+        ) : (
+          <button type="button" className="login-mini" onClick={() => void handleSignOut()}>
+            로그아웃
+          </button>
+        )}
+      </section>
+      <p className="eyebrow">RATEME</p>
+      <p className="description">별점을 누르는 순간, 다음 랜덤 사진으로 바로 넘어갑니다. 당신의 점수는 실시간으로 모두에게 공유됩니다.</p>
+      {showAuthPanel && !session && (
         <section className="auth-card">
           <h2>{authMode === 'signin' ? '로그인' : '회원가입'}</h2>
           <p className="description">Supabase Auth(email/password) 기반 인증입니다.</p>
@@ -460,20 +452,7 @@ function App() {
           {authNotice && <p className="auth-notice">{authNotice}</p>}
           {authError && <p className="sync-error">{authError}</p>}
         </section>
-      </main>
-    )
-  }
-
-  return (
-    <main className="app-shell">
-      <section className="session-bar">
-        <p>로그인: {session.user.email ?? 'unknown'}</p>
-        <button type="button" className="signout-button" onClick={() => void handleSignOut()}>
-          로그아웃
-        </button>
-      </section>
-      <p className="eyebrow">RATEME</p>
-      <p className="description">별점을 누르는 순간, 다음 랜덤 사진으로 바로 넘어갑니다. 당신의 점수는 실시간으로 모두에게 공유됩니다.</p>
+      )}
       {syncLabel && <p className={`sync-status ${syncError ? 'error' : ''}`}>{syncLabel}</p>}
 
       {isLoading && <p className="sync-error">데이터 불러오는 중...</p>}
