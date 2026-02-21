@@ -24,6 +24,15 @@ Supabase Dashboard -> Authentication -> Providers 에서 `Email` provider를 켭
 - Email Confirm ON: 회원가입 후 메일 인증 뒤 로그인 가능
 - Email Confirm OFF: 회원가입 직후 세션 즉시 생성
 
+### Google 로그인 설정
+
+1. Supabase Dashboard -> Authentication -> Providers -> `Google` 활성화
+2. Google Cloud Console에서 OAuth Client 생성 후 Client ID/Secret 입력
+3. Supabase URL allow list에 현재 앱 URL 추가
+4. Google OAuth redirect URI에 Supabase callback URL 등록
+
+참고: https://supabase.com/docs/guides/auth/social-login/auth-google
+
 ## 부정 평가 방지(필수)
 
 중복 평가 차단은 브라우저 저장소가 아니라 DB에서 막아야 합니다.

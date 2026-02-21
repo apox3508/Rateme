@@ -59,6 +59,8 @@ const messages: Record<Locale, Record<string, string>> = {
     auth_password_confirm: 'Confirm Password',
     auth_switch_to_signup: "Don't have an account? Switch to Sign Up",
     auth_switch_to_signin: 'Already have an account? Switch to Log In',
+    auth_google: 'Continue with Google',
+    auth_or_email: 'or continue with email',
     sync_local: 'Local mode',
     sync_error: 'Connection error',
     sync_saving: 'Saving',
@@ -83,6 +85,7 @@ const messages: Record<Locale, Record<string, string>> = {
     auth_signup_verify_email: 'Sign-up complete. Verify your email, then log in.',
     auth_signup_done: 'Sign-up and login complete.',
     auth_signout_failed: 'Logout failed. Please try again.',
+    auth_google_failed: 'Google sign-in failed. Please try again.',
     rating_save_failed: 'Failed to save rating. Check ratings INSERT policy.',
     score_star_sr: 'Current score star {index}',
     rating_aria: 'Give {star} points',
@@ -100,6 +103,8 @@ const messages: Record<Locale, Record<string, string>> = {
     auth_password_confirm: '비밀번호 확인',
     auth_switch_to_signup: '계정이 없나요? 회원가입 화면으로 전환',
     auth_switch_to_signin: '이미 계정이 있나요? 로그인 화면으로 전환',
+    auth_google: 'Google로 계속하기',
+    auth_or_email: '또는 이메일로 계속하기',
     sync_local: '로컬 모드',
     sync_error: '연결 오류',
     sync_saving: '저장 중',
@@ -124,6 +129,7 @@ const messages: Record<Locale, Record<string, string>> = {
     auth_signup_verify_email: '회원가입 완료. 이메일 인증 후 로그인해 주세요.',
     auth_signup_done: '회원가입 및 로그인 완료.',
     auth_signout_failed: '로그아웃 실패: 잠시 후 다시 시도해 주세요.',
+    auth_google_failed: 'Google 로그인 실패: 잠시 후 다시 시도해 주세요.',
     rating_save_failed: '점수 저장 실패: ratings INSERT 정책을 확인해 주세요.',
     score_star_sr: '현재 점수 별 {index}',
     rating_aria: '{star}점 주기',
@@ -141,6 +147,8 @@ const messages: Record<Locale, Record<string, string>> = {
     auth_password_confirm: 'Confirmar contraseña',
     auth_switch_to_signup: '¿No tienes cuenta? Cambiar a registro',
     auth_switch_to_signin: '¿Ya tienes cuenta? Cambiar a inicio de sesión',
+    auth_google: 'Continuar con Google',
+    auth_or_email: 'o continuar con correo',
     sync_local: 'Modo local',
     sync_error: 'Error de conexión',
     sync_saving: 'Guardando',
@@ -165,6 +173,7 @@ const messages: Record<Locale, Record<string, string>> = {
     auth_signup_verify_email: 'Registro completo. Verifica tu correo y luego inicia sesión.',
     auth_signup_done: 'Registro e inicio de sesión completados.',
     auth_signout_failed: 'Error al cerrar sesión. Inténtalo de nuevo.',
+    auth_google_failed: 'Error en inicio de sesión con Google. Inténtalo de nuevo.',
     rating_save_failed: 'No se pudo guardar la valoración. Revisa policy INSERT de ratings.',
     score_star_sr: 'Estrella de puntuación actual {index}',
     rating_aria: 'Dar {star} puntos',
@@ -182,6 +191,8 @@ const messages: Record<Locale, Record<string, string>> = {
     auth_password_confirm: 'パスワード確認',
     auth_switch_to_signup: 'アカウントがありませんか？ 新規登録へ',
     auth_switch_to_signin: 'アカウントをお持ちですか？ ログインへ',
+    auth_google: 'Googleで続行',
+    auth_or_email: 'またはメールで続行',
     sync_local: 'ローカルモード',
     sync_error: '接続エラー',
     sync_saving: '保存中',
@@ -206,6 +217,7 @@ const messages: Record<Locale, Record<string, string>> = {
     auth_signup_verify_email: '登録完了。メール認証後にログインしてください。',
     auth_signup_done: '登録とログインが完了しました。',
     auth_signout_failed: 'ログアウトに失敗しました。後でもう一度お試しください。',
+    auth_google_failed: 'Googleログインに失敗しました。後でもう一度お試しください。',
     rating_save_failed: '評価の保存に失敗しました。ratings INSERTポリシーを確認してください。',
     score_star_sr: '現在スコアの星 {index}',
     rating_aria: '{star}点をつける',
@@ -223,6 +235,8 @@ const messages: Record<Locale, Record<string, string>> = {
     auth_password_confirm: 'Confirmer le mot de passe',
     auth_switch_to_signup: "Pas de compte ? Passer à l'inscription",
     auth_switch_to_signin: 'Déjà un compte ? Passer à la connexion',
+    auth_google: 'Continuer avec Google',
+    auth_or_email: 'ou continuer avec e-mail',
     sync_local: 'Mode local',
     sync_error: 'Erreur de connexion',
     sync_saving: 'Enregistrement',
@@ -247,6 +261,7 @@ const messages: Record<Locale, Record<string, string>> = {
     auth_signup_verify_email: "Inscription terminée. Vérifiez votre e-mail puis connectez-vous.",
     auth_signup_done: 'Inscription et connexion terminées.',
     auth_signout_failed: 'Échec de déconnexion. Veuillez réessayer.',
+    auth_google_failed: 'Échec de connexion Google. Veuillez réessayer.',
     rating_save_failed: "Échec de l'enregistrement de la note. Vérifiez la policy INSERT de ratings.",
     score_star_sr: 'Étoile du score actuel {index}',
     rating_aria: 'Donner {star} points',
@@ -637,6 +652,26 @@ function App() {
     }
   }
 
+  const handleGoogleSignIn = async () => {
+    if (!supabase) {
+      return
+    }
+
+    setAuthError(null)
+    setAuthNotice(null)
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: `${window.location.origin}${window.location.pathname}`,
+      },
+    })
+
+    if (error) {
+      setAuthError(t('auth_google_failed'))
+    }
+  }
+
   const handleRating = async (rating: number) => {
     if (!supabase || !currentPerson) {
       return
@@ -745,6 +780,15 @@ function App() {
             <h2>{authMode === 'signin' ? t('auth_signin_title') : t('auth_signup_title')}</h2>
             <p className="auth-mode-hint">
               {isSignupMode ? t('auth_signup_hint') : t('auth_signin_hint')}
+            </p>
+            <button type="button" className="auth-google" onClick={() => void handleGoogleSignIn()}>
+              <span className="auth-google-mark" aria-hidden="true">
+                G
+              </span>
+              {t('auth_google')}
+            </button>
+            <p className="auth-divider" aria-hidden="true">
+              {t('auth_or_email')}
             </p>
             <form className="auth-form" onSubmit={handleAuthSubmit}>
               <label htmlFor="email">{t('auth_email')}</label>
