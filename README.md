@@ -1,19 +1,28 @@
-# React + TypeScript + Vite
+# Rateme (React + Supabase)
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Supabase Auth(email/password) 기반 `회원가입/로그인`과 평점 저장/조회가 동작합니다.
 
-## Rateme Migration (Step 1)
+## Supabase CLI 연결
 
-Firebase was removed and Supabase client wiring has been added.
+```bash
+supabase login
+supabase link --project-ref <your-project-ref>
+supabase projects list
+```
 
-### Supabase env setup
+## Supabase env setup
 
 1. Copy `.env.example` to `.env`.
-2. Fill in these values:
+2. Fill in:
    - `VITE_SUPABASE_URL`
    - `VITE_SUPABASE_ANON_KEY`
 
-At this step, rating data is still local in the browser. Shared DB syncing will be added in step 2.
+## Supabase Auth 설정
+
+Supabase Dashboard -> Authentication -> Providers 에서 `Email` provider를 켭니다.
+
+- Email Confirm ON: 회원가입 후 메일 인증 뒤 로그인 가능
+- Email Confirm OFF: 회원가입 직후 세션 즉시 생성
 
 ### GitHub Pages deploy secrets
 

@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
+import type { FormEvent } from 'react'
+import type { Session } from '@supabase/supabase-js'
 import './App.css'
 import { hasSupabaseConfig, missingSupabaseKeys, supabase } from './supabase'
 
@@ -26,7 +28,7 @@ type RatingRow = {
   score: number
 }
 
-const RATED_FACE_IDS_STORAGE_KEY = 'rateme_rated_face_ids'
+const RATED_FACE_IDS_STORAGE_KEY_PREFIX = 'rateme_rated_face_ids'
 const REFERENCE_STAR_URL =
   'https://ik.imagekit.io/rat3me/New%20Folder/pngtree-three-dimensional-golden-star-with-sharp-points-and-a-smooth-surface-png-image_16474576.png'
 
@@ -75,9 +77,9 @@ function aggregateScores(faces: Person[], ratings: RatingRow[]) {
   return nextScores
 }
 
-function loadRatedFaceIds() {
+function loadRatedFaceIds(storageKey: string) {
   try {
-    const raw = localStorage.getItem(RATED_FACE_IDS_STORAGE_KEY)
+    const raw = localStorage.getItem(storageKey)
     if (!raw) {
       return []
     }
@@ -112,6 +114,13 @@ function ScoreStar({ fillRatio, index }: { fillRatio: number; index: number }) {
 }
 
 function App() {
+  const [session, setSession] = useState<Session | null>(null)
+  const [isAuthLoading, setIsAuthLoading] = useState(true)
+  const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const [authError, setAuthError] = useState<string | null>(null)
+  const [authNotice, setAuthNotice] = useState<string | null>(null)
   const [people, setPeople] = useState<Person[]>([])
   const [currentId, setCurrentId] = useState<number | null>(null)
   const [scores, setScores] = useState<Record<number, Score>>({})
@@ -120,7 +129,12 @@ function App() {
   const [syncError, setSyncError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [pendingWrites, setPendingWrites] = useState(0)
-  const [ratedFaceIds, setRatedFaceIds] = useState<number[]>(() => loadRatedFaceIds())
+  const [ratedFaceIds, setRatedFaceIds] = useState<number[]>([])
+
+  const ratedFaceIdsStorageKey = useMemo(
+    () => `${RATED_FACE_IDS_STORAGE_KEY_PREFIX}_${session?.user.id ?? 'guest'}`,
+    [session?.user.id],
+  )
 
   const ratedFaceIdsSet = useMemo(() => new Set(ratedFaceIds), [ratedFaceIds])
   const unratedPeople = useMemo(
@@ -134,8 +148,21 @@ function App() {
   const currentAverage = currentScore.count ? currentScore.total / currentScore.count : 0
 
   useEffect(() => {
-    localStorage.setItem(RATED_FACE_IDS_STORAGE_KEY, JSON.stringify(ratedFaceIds))
-  }, [ratedFaceIds])
+    if (!session) {
+      setRatedFaceIds([])
+      return
+    }
+
+    setRatedFaceIds(loadRatedFaceIds(ratedFaceIdsStorageKey))
+  }, [session, ratedFaceIdsStorageKey])
+
+  useEffect(() => {
+    if (!session) {
+      return
+    }
+
+    localStorage.setItem(ratedFaceIdsStorageKey, JSON.stringify(ratedFaceIds))
+  }, [ratedFaceIds, ratedFaceIdsStorageKey, session])
 
   useEffect(() => {
     if (unratedPeople.length === 0) {
@@ -150,10 +177,54 @@ function App() {
 
   useEffect(() => {
     if (!supabase || !hasSupabaseConfig) {
+      setIsAuthLoading(false)
+      return
+    }
+
+    const client = supabase
+
+    const initializeSession = async () => {
+      const { data, error } = await client.auth.getSession()
+
+      if (error) {
+        setAuthError('세션 조회 실패: 잠시 후 다시 시도해 주세요.')
+      } else {
+        setSession(data.session)
+      }
+
+      setIsAuthLoading(false)
+    }
+
+    void initializeSession()
+
+    const {
+      data: { subscription },
+    } = client.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession)
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!supabase || !hasSupabaseConfig) {
       setSyncError(`Supabase 설정 누락: ${missingSupabaseKeys.join(', ')}`)
       setIsLoading(false)
       return
     }
+
+    if (!session) {
+      setIsLoading(false)
+      setPeople([])
+      setScores({})
+      setCurrentId(null)
+      setLastVote(null)
+      setSyncError(null)
+      return
+    }
+
     const client = supabase
 
     let isCancelled = false
@@ -213,7 +284,73 @@ function App() {
       isCancelled = true
       void client.removeChannel(channel)
     }
-  }, [])
+  }, [session])
+
+  const handleAuthSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!supabase) {
+      return
+    }
+
+    setAuthError(null)
+    setAuthNotice(null)
+
+    if (!email || !password) {
+      setAuthError('이메일과 비밀번호를 입력해 주세요.')
+      return
+    }
+
+    if (password.length < 6) {
+      setAuthError('비밀번호는 6자 이상이어야 합니다.')
+      return
+    }
+
+    const client = supabase
+
+    if (authMode === 'signup') {
+      const { data, error } = await client.auth.signUp({
+        email: email.trim(),
+        password,
+      })
+
+      if (error) {
+        setAuthError(error.message)
+        return
+      }
+
+      setPassword('')
+      if (!data.session) {
+        setAuthNotice('회원가입 완료. 이메일 인증 후 로그인해 주세요.')
+      } else {
+        setAuthNotice('회원가입 및 로그인 완료.')
+      }
+
+      return
+    }
+
+    const { error } = await client.auth.signInWithPassword({
+      email: email.trim(),
+      password,
+    })
+
+    if (error) {
+      setAuthError(error.message)
+      return
+    }
+
+    setPassword('')
+  }
+
+  const handleSignOut = async () => {
+    if (!supabase) {
+      return
+    }
+
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      setAuthError('로그아웃 실패: 잠시 후 다시 시도해 주세요.')
+    }
+  }
 
   const handleRating = async (rating: number) => {
     if (!supabase || !currentPerson) {
@@ -260,8 +397,81 @@ function App() {
         ? '저장 중'
         : ''
 
+  if (!hasSupabaseConfig) {
+    return (
+      <main className="app-shell">
+        <p className="eyebrow">RATEME</p>
+        <p className="sync-error">Supabase 설정 누락: {missingSupabaseKeys.join(', ')}</p>
+      </main>
+    )
+  }
+
+  if (isAuthLoading) {
+    return (
+      <main className="app-shell">
+        <p className="eyebrow">RATEME</p>
+        <p className="description">인증 상태 확인 중...</p>
+      </main>
+    )
+  }
+
+  if (!session) {
+    return (
+      <main className="app-shell auth-shell">
+        <p className="eyebrow">RATEME</p>
+        <section className="auth-card">
+          <h2>{authMode === 'signin' ? '로그인' : '회원가입'}</h2>
+          <p className="description">Supabase Auth(email/password) 기반 인증입니다.</p>
+          <form className="auth-form" onSubmit={handleAuthSubmit}>
+            <label htmlFor="email">이메일</label>
+            <input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              autoComplete="email"
+              required
+            />
+            <label htmlFor="password">비밀번호</label>
+            <input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              autoComplete={authMode === 'signin' ? 'current-password' : 'new-password'}
+              minLength={6}
+              required
+            />
+            <button type="submit" className="auth-submit">
+              {authMode === 'signin' ? '로그인' : '회원가입'}
+            </button>
+          </form>
+          <button
+            type="button"
+            className="auth-switch"
+            onClick={() => {
+              setAuthMode((prev) => (prev === 'signin' ? 'signup' : 'signin'))
+              setAuthError(null)
+              setAuthNotice(null)
+            }}
+          >
+            {authMode === 'signin' ? '계정이 없나요? 회원가입' : '이미 계정이 있나요? 로그인'}
+          </button>
+          {authNotice && <p className="auth-notice">{authNotice}</p>}
+          {authError && <p className="sync-error">{authError}</p>}
+        </section>
+      </main>
+    )
+  }
+
   return (
     <main className="app-shell">
+      <section className="session-bar">
+        <p>로그인: {session.user.email ?? 'unknown'}</p>
+        <button type="button" className="signout-button" onClick={() => void handleSignOut()}>
+          로그아웃
+        </button>
+      </section>
       <p className="eyebrow">RATEME</p>
       <p className="description">별점을 누르는 순간, 다음 랜덤 사진으로 바로 넘어갑니다. 당신의 점수는 실시간으로 모두에게 공유됩니다.</p>
       {syncLabel && <p className={`sync-status ${syncError ? 'error' : ''}`}>{syncLabel}</p>}
