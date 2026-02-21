@@ -78,6 +78,31 @@
   color: #0f172a;
 }
 
+.auth-mode-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+  margin-bottom: 0.7rem;
+}
+
+.auth-mode-tab {
+  border: 1px solid rgba(148, 163, 184, 0.42);
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 700;
+  padding: 0.46rem 0.6rem;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.auth-mode-tab.active {
+  background: linear-gradient(180deg, #e11d48 0%, #be123c 100%);
+  color: #fff;
+  border-color: rgba(190, 24, 93, 0.76);
+  box-shadow: 0 8px 18px rgba(190, 24, 93, 0.22);
+}
+
 .auth-form {
   margin-top: 0.8rem;
   display: grid;

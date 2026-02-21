@@ -142,6 +142,7 @@ function App() {
   const [authMode, setAuthMode] = useState<'signin' | 'signup'>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
   const [authError, setAuthError] = useState<string | null>(null)
   const [authNotice, setAuthNotice] = useState<string | null>(null)
   const [people, setPeople] = useState<Person[]>([])
@@ -330,6 +331,11 @@ function App() {
       return
     }
 
+    if (authMode === 'signup' && password !== confirmPassword) {
+      setAuthError('비밀번호 확인이 일치하지 않습니다.')
+      return
+    }
+
     const client = supabase
 
     if (authMode === 'signup') {
@@ -344,6 +350,7 @@ function App() {
       }
 
       setPassword('')
+      setConfirmPassword('')
       if (!data.session) {
         setAuthNotice('회원가입 완료. 이메일 인증 후 로그인해 주세요.')
       } else {
@@ -365,6 +372,7 @@ function App() {
     }
 
     setPassword('')
+    setConfirmPassword('')
     closeAuthPanel()
   }
 
@@ -464,6 +472,34 @@ function App() {
       <p className="description">별점을 누르는 순간, 다음 랜덤 사진으로 바로 넘어갑니다. 당신의 점수는 실시간으로 모두에게 공유됩니다.</p>
       {(showAuthPanel || isAuthPanelClosing) && !session && (
         <section className={`auth-card ${isAuthPanelClosing ? 'auth-card-exit' : 'auth-card-enter'}`}>
+          <div className="auth-mode-tabs" role="tablist" aria-label="인증 모드">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={authMode === 'signin'}
+              className={`auth-mode-tab ${authMode === 'signin' ? 'active' : ''}`}
+              onClick={() => {
+                setAuthMode('signin')
+                setAuthError(null)
+                setAuthNotice(null)
+              }}
+            >
+              로그인
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={authMode === 'signup'}
+              className={`auth-mode-tab ${authMode === 'signup' ? 'active' : ''}`}
+              onClick={() => {
+                setAuthMode('signup')
+                setAuthError(null)
+                setAuthNotice(null)
+              }}
+            >
+              회원가입
+            </button>
+          </div>
           <h2>{authMode === 'signin' ? '로그인' : '회원가입'}</h2>
           <form className="auth-form" onSubmit={handleAuthSubmit}>
             <label htmlFor="email">이메일</label>
@@ -485,6 +521,20 @@ function App() {
               minLength={6}
               required
             />
+            {authMode === 'signup' && (
+              <>
+                <label htmlFor="confirm-password">비밀번호 확인</label>
+                <input
+                  id="confirm-password"
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  autoComplete="new-password"
+                  minLength={6}
+                  required
+                />
+              </>
+            )}
             <button type="submit" className="auth-submit">
               {authMode === 'signin' ? '로그인' : '회원가입'}
             </button>
