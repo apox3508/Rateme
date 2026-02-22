@@ -28,6 +28,13 @@ type RatingRow = {
   score: number
 }
 
+type CommentRow = {
+  id: number
+  face_id: number
+  content: string
+  created_at: string
+}
+
 type Locale = 'en' | 'ko' | 'es' | 'ja' | 'fr'
 
 const DEVICE_RATED_FACE_IDS_STORAGE_KEY = 'rateme_rated_face_ids_v1'
@@ -91,8 +98,15 @@ const messages: Record<Locale, Record<string, string>> = {
     score_avg_aria: 'Current average {avg}',
     score_count: 'Rated by {count} people',
     score_hint: 'Click a score from 1 to 5.',
-    last_vote_none: 'No ratings yet.',
-    last_vote: 'Recent rating: {name} {rating}',
+    comment_title: 'Comments',
+    comment_for: 'Comments for {name}',
+    comment_placeholder: 'Write a comment (max 300 characters)',
+    comment_submit: 'Post',
+    comment_empty: 'No comments yet.',
+    comment_unavailable: 'Select a photo to write comments.',
+    comments_failed: 'Failed to fetch comments. Check comments table/policies.',
+    comment_save_failed: 'Failed to save comment. Check comments INSERT policy.',
+    comment_too_long: 'Comment must be 300 characters or less.',
     missing_config: 'Missing Supabase config: {keys}',
     session_failed: 'Failed to fetch session. Please try again.',
     faces_failed: 'Failed to fetch faces. Check table/policies.',
@@ -154,8 +168,15 @@ const messages: Record<Locale, Record<string, string>> = {
     score_avg_aria: '현재 평균 {avg}점',
     score_count: '총 {count}명 평가',
     score_hint: '1점~5점 중 하나를 클릭하세요.',
-    last_vote_none: '아직 평가가 없습니다.',
-    last_vote: '최근 평가: {name} {rating}',
+    comment_title: '댓글',
+    comment_for: '{name} 댓글',
+    comment_placeholder: '댓글을 입력하세요 (최대 300자)',
+    comment_submit: '등록',
+    comment_empty: '아직 댓글이 없습니다.',
+    comment_unavailable: '사진을 선택하면 댓글을 작성할 수 있습니다.',
+    comments_failed: 'comments 조회 실패: 테이블/정책을 확인해 주세요.',
+    comment_save_failed: '댓글 저장 실패: comments INSERT 정책을 확인해 주세요.',
+    comment_too_long: '댓글은 300자 이하로 입력해 주세요.',
     missing_config: 'Supabase 설정 누락: {keys}',
     session_failed: '세션 조회 실패: 잠시 후 다시 시도해 주세요.',
     faces_failed: 'faces 조회 실패: 테이블/정책을 확인해 주세요.',
@@ -217,8 +238,15 @@ const messages: Record<Locale, Record<string, string>> = {
     score_avg_aria: 'Promedio actual {avg}',
     score_count: 'Valorado por {count} personas',
     score_hint: 'Haz clic en una puntuación del 1 al 5.',
-    last_vote_none: 'Aún no hay valoraciones.',
-    last_vote: 'Valoración reciente: {name} {rating}',
+    comment_title: 'Comentarios',
+    comment_for: 'Comentarios de {name}',
+    comment_placeholder: 'Escribe un comentario (máximo 300 caracteres)',
+    comment_submit: 'Publicar',
+    comment_empty: 'Aún no hay comentarios.',
+    comment_unavailable: 'Selecciona una foto para escribir comentarios.',
+    comments_failed: 'Error al consultar comments. Revisa tabla/políticas.',
+    comment_save_failed: 'No se pudo guardar el comentario. Revisa policy INSERT de comments.',
+    comment_too_long: 'El comentario debe tener 300 caracteres o menos.',
     missing_config: 'Falta configuración de Supabase: {keys}',
     session_failed: 'No se pudo obtener la sesión. Inténtalo de nuevo.',
     faces_failed: 'Error al consultar faces. Revisa tabla/políticas.',
@@ -280,8 +308,15 @@ const messages: Record<Locale, Record<string, string>> = {
     score_avg_aria: '現在平均 {avg}',
     score_count: '評価人数 {count}人',
     score_hint: '1〜5のいずれかをクリックしてください。',
-    last_vote_none: 'まだ評価がありません。',
-    last_vote: '最近の評価: {name} {rating}',
+    comment_title: 'コメント',
+    comment_for: '{name}へのコメント',
+    comment_placeholder: 'コメントを入力（300文字以内）',
+    comment_submit: '投稿',
+    comment_empty: 'まだコメントがありません。',
+    comment_unavailable: '写真を選択するとコメントできます。',
+    comments_failed: 'commentsの取得に失敗しました。テーブル/ポリシーを確認してください。',
+    comment_save_failed: 'コメントの保存に失敗しました。comments INSERTポリシーを確認してください。',
+    comment_too_long: 'コメントは300文字以内で入力してください。',
     missing_config: 'Supabase設定が不足しています: {keys}',
     session_failed: 'セッション取得に失敗しました。後でもう一度お試しください。',
     faces_failed: 'facesの取得に失敗しました。テーブル/ポリシーを確認してください。',
@@ -343,8 +378,15 @@ const messages: Record<Locale, Record<string, string>> = {
     score_avg_aria: 'Moyenne actuelle {avg}',
     score_count: 'Noté par {count} personnes',
     score_hint: 'Cliquez sur une note de 1 à 5.',
-    last_vote_none: 'Aucune note pour le moment.',
-    last_vote: 'Dernière note : {name} {rating}',
+    comment_title: 'Commentaires',
+    comment_for: 'Commentaires pour {name}',
+    comment_placeholder: 'Écrivez un commentaire (300 caractères max)',
+    comment_submit: 'Publier',
+    comment_empty: 'Aucun commentaire pour le moment.',
+    comment_unavailable: 'Sélectionnez une photo pour commenter.',
+    comments_failed: 'Échec de lecture de comments. Vérifiez table/policies.',
+    comment_save_failed: "Échec de l'enregistrement du commentaire. Vérifiez la policy INSERT de comments.",
+    comment_too_long: 'Le commentaire doit contenir 300 caractères maximum.',
     missing_config: 'Configuration Supabase manquante : {keys}',
     session_failed: 'Échec de récupération de session. Veuillez réessayer.',
     faces_failed: 'Échec de lecture de faces. Vérifiez table/policies.',
@@ -419,6 +461,16 @@ function aggregateScores(faces: Person[], ratings: RatingRow[]) {
   })
 
   return nextScores
+}
+
+function groupCommentsByFace(rows: CommentRow[]) {
+  return rows.reduce<Record<number, CommentRow[]>>((acc, row) => {
+    if (!acc[row.face_id]) {
+      acc[row.face_id] = []
+    }
+    acc[row.face_id].push(row)
+    return acc
+  }, {})
 }
 
 function parseRatedFaceIds(raw: string | null) {
@@ -497,8 +549,11 @@ function App() {
   const [people, setPeople] = useState<Person[]>([])
   const [currentId, setCurrentId] = useState<number | null>(null)
   const [scores, setScores] = useState<Record<number, Score>>({})
+  const [commentsByFace, setCommentsByFace] = useState<Record<number, CommentRow[]>>({})
+  const [commentText, setCommentText] = useState('')
+  const [commentError, setCommentError] = useState<string | null>(null)
+  const [isCommentSubmitting, setIsCommentSubmitting] = useState(false)
   const [hoverStars, setHoverStars] = useState(0)
-  const [lastVote, setLastVote] = useState<{ rating: number; personName: string } | null>(null)
   const [syncError, setSyncError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [pendingWrites, setPendingWrites] = useState(0)
@@ -514,6 +569,7 @@ function App() {
 
   const currentPerson = unratedPeople.find((person) => person.id === currentId) ?? null
   const currentScore = currentPerson ? scores[currentPerson.id] ?? { total: 0, count: 0 } : { total: 0, count: 0 }
+  const currentComments = currentPerson ? commentsByFace[currentPerson.id] ?? [] : []
   const currentAverage = currentScore.count ? currentScore.total / currentScore.count : 0
   const t = (key: string, vars?: Record<string, string | number>) => {
     const template = messages[locale][key] ?? messages.en[key] ?? key
@@ -538,6 +594,11 @@ function App() {
   useEffect(() => {
     localStorage.setItem(LOCALE_STORAGE_KEY, locale)
   }, [locale])
+
+  useEffect(() => {
+    setCommentText('')
+    setCommentError(null)
+  }, [currentId])
 
   useEffect(() => {
     if (unratedPeople.length === 0) {
@@ -607,12 +668,13 @@ function App() {
     let isCancelled = false
 
     const refreshFromDb = async () => {
-      const [facesResult, ratingsResult, myRatingsResult] = await Promise.all([
+      const [facesResult, ratingsResult, myRatingsResult, commentsResult] = await Promise.all([
         client.from('faces').select('id,name,title,image_url').eq('status', 'approved'),
         client.from('ratings').select('face_id,score'),
         session
           ? client.from('ratings').select('face_id').eq('user_id', session.user.id)
           : Promise.resolve({ data: [], error: null }),
+        client.from('comments').select('id,face_id,content,created_at').order('created_at', { ascending: false }),
       ])
 
       if (isCancelled) {
@@ -641,6 +703,12 @@ function App() {
 
       setPeople(nextPeople)
       setScores(nextScores)
+      if (commentsResult.error) {
+        setCommentsByFace({})
+        setSyncError(t('comments_failed'))
+      } else {
+        setCommentsByFace(groupCommentsByFace((commentsResult.data ?? []) as CommentRow[]))
+      }
       const myRatedFaceIds = ((myRatingsResult.data ?? []) as Array<{ face_id: number }>).map((row) => row.face_id)
       if (session) {
         // 로그인 상태에서는 해당 계정의 평가 이력만 기준으로 필터링
@@ -649,7 +717,9 @@ function App() {
         // 비로그인 상태에서는 기기(localStorage) 이력 기준으로 필터링
         setRatedFaceIds(Array.from(new Set(loadDeviceRatedFaceIds())))
       }
-      setSyncError(null)
+      if (!commentsResult.error) {
+        setSyncError(null)
+      }
       setIsLoading(false)
     }
 
@@ -667,6 +737,13 @@ function App() {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'faces' },
+        () => {
+          void refreshFromDb()
+        },
+      )
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'comments' },
         () => {
           void refreshFromDb()
         },
@@ -839,7 +916,6 @@ function App() {
     }
     const client = supabase
 
-    const ratedPerson = currentPerson
     const ratedPersonId = currentPerson.id
     const nextPeople = unratedPeople.filter((person) => person.id !== ratedPersonId)
 
@@ -851,7 +927,6 @@ function App() {
       },
     }))
 
-    setLastVote({ rating, personName: ratedPerson.name })
     setHoverStars(0)
     setRatedFaceIds((prev) => (prev.includes(ratedPersonId) ? prev : [...prev, ratedPersonId]))
     setCurrentId(pickRandomPersonId(nextPeople))
@@ -869,6 +944,51 @@ function App() {
     if (error) {
       setSyncError(t('rating_save_failed'))
     }
+  }
+
+  const handleCommentSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!supabase || !currentPerson) {
+      return
+    }
+
+    const content = commentText.trim()
+    if (!content) {
+      return
+    }
+    if (content.length > 300) {
+      setCommentError(t('comment_too_long'))
+      return
+    }
+
+    setCommentError(null)
+    setIsCommentSubmitting(true)
+
+    const payload = session
+      ? { face_id: currentPerson.id, content, user_id: session.user.id }
+      : { face_id: currentPerson.id, content }
+
+    const { data, error } = await supabase
+      .from('comments')
+      .insert(payload)
+      .select('id,face_id,content,created_at')
+      .single()
+
+    setIsCommentSubmitting(false)
+
+    if (error) {
+      setCommentError(t('comment_save_failed'))
+      return
+    }
+
+    const savedRow = data as CommentRow | null
+    if (savedRow) {
+      setCommentsByFace((prev) => ({
+        ...prev,
+        [savedRow.face_id]: [savedRow, ...(prev[savedRow.face_id] ?? [])],
+      }))
+    }
+    setCommentText('')
   }
 
   const syncLabel = !hasSupabaseConfig
@@ -1158,9 +1278,42 @@ function App() {
           )}
 
           <section className="summary">
-            <p className="last-vote">
-              {lastVote ? t('last_vote', { name: lastVote.personName, rating: `${lastVote.rating}` }) : t('last_vote_none')}
-            </p>
+            <h3>{t('comment_title')}</h3>
+            {currentPerson ? (
+              <>
+                <p className="comment-target">{t('comment_for', { name: currentPerson.name })}</p>
+                <form className="comment-form" onSubmit={handleCommentSubmit}>
+                  <textarea
+                    value={commentText}
+                    onChange={(event) => setCommentText(event.target.value)}
+                    placeholder={t('comment_placeholder')}
+                    maxLength={300}
+                  />
+                  <div className="comment-form-row">
+                    <p className="comment-counter">{commentText.trim().length}/300</p>
+                    <button type="submit" className="comment-submit" disabled={isCommentSubmitting || !commentText.trim()}>
+                      {t('comment_submit')}
+                    </button>
+                  </div>
+                </form>
+
+                {currentComments.length === 0 ? (
+                  <p className="comment-empty">{t('comment_empty')}</p>
+                ) : (
+                  <ul className="comment-list">
+                    {currentComments.slice(0, 10).map((comment) => (
+                      <li key={comment.id} className="comment-item">
+                        <p>{comment.content}</p>
+                        <time dateTime={comment.created_at}>{new Date(comment.created_at).toLocaleString(locale)}</time>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </>
+            ) : (
+              <p className="comment-empty">{t('comment_unavailable')}</p>
+            )}
+            {commentError && <p className="sync-error">{commentError}</p>}
             {syncError && <p className="sync-error">{syncError}</p>}
           </section>
         </>

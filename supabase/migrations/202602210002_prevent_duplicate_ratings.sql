@@ -29,6 +29,7 @@ end
 $$;
 
 -- Keep ratings readable for scoreboard aggregation.
+drop policy if exists ratings_select_all on public.ratings;
 create policy ratings_select_all
   on public.ratings
   for select
@@ -36,6 +37,7 @@ create policy ratings_select_all
   using (true);
 
 -- Only authenticated users can insert ratings for themselves.
+drop policy if exists ratings_insert_authenticated_own on public.ratings;
 create policy ratings_insert_authenticated_own
   on public.ratings
   for insert
