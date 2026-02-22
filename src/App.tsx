@@ -31,6 +31,7 @@ type RatingRow = {
 type CommentRow = {
   id: number
   face_id: number
+  user_id: string | null
   content: string
   created_at: string
 }
@@ -99,13 +100,14 @@ const messages: Record<Locale, Record<string, string>> = {
     score_count: 'Rated by {count} people',
     score_hint: 'Click a score from 1 to 5.',
     comment_title: 'Comments',
-    comment_for: 'Comments for {name}',
     comment_placeholder: 'Write a comment (max 300 characters)',
     comment_submit: 'Post',
+    comment_delete: 'Delete',
     comment_empty: 'No comments yet.',
-    comment_unavailable: 'Select a photo to write comments.',
+    comment_login_required: 'Log in to write comments.',
     comments_failed: 'Failed to fetch comments. Check comments table/policies.',
     comment_save_failed: 'Failed to save comment. Check comments INSERT policy.',
+    comment_delete_failed: 'Failed to delete comment. Please try again.',
     comment_too_long: 'Comment must be 300 characters or less.',
     missing_config: 'Missing Supabase config: {keys}',
     session_failed: 'Failed to fetch session. Please try again.',
@@ -169,13 +171,14 @@ const messages: Record<Locale, Record<string, string>> = {
     score_count: '총 {count}명 평가',
     score_hint: '1점~5점 중 하나를 클릭하세요.',
     comment_title: '댓글',
-    comment_for: '{name} 댓글',
     comment_placeholder: '댓글을 입력하세요 (최대 300자)',
     comment_submit: '등록',
+    comment_delete: '삭제',
     comment_empty: '아직 댓글이 없습니다.',
-    comment_unavailable: '사진을 선택하면 댓글을 작성할 수 있습니다.',
+    comment_login_required: '댓글 작성은 로그인 후 가능합니다.',
     comments_failed: 'comments 조회 실패: 테이블/정책을 확인해 주세요.',
     comment_save_failed: '댓글 저장 실패: comments INSERT 정책을 확인해 주세요.',
+    comment_delete_failed: '댓글 삭제 실패: 잠시 후 다시 시도해 주세요.',
     comment_too_long: '댓글은 300자 이하로 입력해 주세요.',
     missing_config: 'Supabase 설정 누락: {keys}',
     session_failed: '세션 조회 실패: 잠시 후 다시 시도해 주세요.',
@@ -239,13 +242,14 @@ const messages: Record<Locale, Record<string, string>> = {
     score_count: 'Valorado por {count} personas',
     score_hint: 'Haz clic en una puntuación del 1 al 5.',
     comment_title: 'Comentarios',
-    comment_for: 'Comentarios de {name}',
     comment_placeholder: 'Escribe un comentario (máximo 300 caracteres)',
     comment_submit: 'Publicar',
+    comment_delete: 'Eliminar',
     comment_empty: 'Aún no hay comentarios.',
-    comment_unavailable: 'Selecciona una foto para escribir comentarios.',
+    comment_login_required: 'Inicia sesión para escribir comentarios.',
     comments_failed: 'Error al consultar comments. Revisa tabla/políticas.',
     comment_save_failed: 'No se pudo guardar el comentario. Revisa policy INSERT de comments.',
+    comment_delete_failed: 'No se pudo eliminar el comentario. Inténtalo de nuevo.',
     comment_too_long: 'El comentario debe tener 300 caracteres o menos.',
     missing_config: 'Falta configuración de Supabase: {keys}',
     session_failed: 'No se pudo obtener la sesión. Inténtalo de nuevo.',
@@ -309,13 +313,14 @@ const messages: Record<Locale, Record<string, string>> = {
     score_count: '評価人数 {count}人',
     score_hint: '1〜5のいずれかをクリックしてください。',
     comment_title: 'コメント',
-    comment_for: '{name}へのコメント',
     comment_placeholder: 'コメントを入力（300文字以内）',
     comment_submit: '投稿',
+    comment_delete: '削除',
     comment_empty: 'まだコメントがありません。',
-    comment_unavailable: '写真を選択するとコメントできます。',
+    comment_login_required: 'コメントするにはログインしてください。',
     comments_failed: 'commentsの取得に失敗しました。テーブル/ポリシーを確認してください。',
     comment_save_failed: 'コメントの保存に失敗しました。comments INSERTポリシーを確認してください。',
+    comment_delete_failed: 'コメントの削除に失敗しました。後でもう一度お試しください。',
     comment_too_long: 'コメントは300文字以内で入力してください。',
     missing_config: 'Supabase設定が不足しています: {keys}',
     session_failed: 'セッション取得に失敗しました。後でもう一度お試しください。',
@@ -379,13 +384,14 @@ const messages: Record<Locale, Record<string, string>> = {
     score_count: 'Noté par {count} personnes',
     score_hint: 'Cliquez sur une note de 1 à 5.',
     comment_title: 'Commentaires',
-    comment_for: 'Commentaires pour {name}',
     comment_placeholder: 'Écrivez un commentaire (300 caractères max)',
     comment_submit: 'Publier',
+    comment_delete: 'Supprimer',
     comment_empty: 'Aucun commentaire pour le moment.',
-    comment_unavailable: 'Sélectionnez une photo pour commenter.',
+    comment_login_required: 'Connectez-vous pour écrire un commentaire.',
     comments_failed: 'Échec de lecture de comments. Vérifiez table/policies.',
     comment_save_failed: "Échec de l'enregistrement du commentaire. Vérifiez la policy INSERT de comments.",
+    comment_delete_failed: 'Échec de suppression du commentaire. Veuillez réessayer.',
     comment_too_long: 'Le commentaire doit contenir 300 caractères maximum.',
     missing_config: 'Configuration Supabase manquante : {keys}',
     session_failed: 'Échec de récupération de session. Veuillez réessayer.',
@@ -674,7 +680,7 @@ function App() {
         session
           ? client.from('ratings').select('face_id').eq('user_id', session.user.id)
           : Promise.resolve({ data: [], error: null }),
-        client.from('comments').select('id,face_id,content,created_at').order('created_at', { ascending: false }),
+        client.from('comments').select('id,face_id,user_id,content,created_at').order('created_at', { ascending: false }),
       ])
 
       if (isCancelled) {
@@ -948,7 +954,8 @@ function App() {
 
   const handleCommentSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (!supabase || !currentPerson) {
+    if (!supabase || !currentPerson || !session) {
+      setCommentError(t('comment_login_required'))
       return
     }
 
@@ -971,7 +978,7 @@ function App() {
     const { data, error } = await supabase
       .from('comments')
       .insert(payload)
-      .select('id,face_id,content,created_at')
+      .select('id,face_id,user_id,content,created_at')
       .single()
 
     setIsCommentSubmitting(false)
@@ -989,6 +996,29 @@ function App() {
       }))
     }
     setCommentText('')
+  }
+
+  const handleCommentDelete = async (commentId: number) => {
+    if (!supabase || !session || !currentPerson) {
+      return
+    }
+
+    setCommentError(null)
+    const { error } = await supabase
+      .from('comments')
+      .delete()
+      .eq('id', commentId)
+      .eq('user_id', session.user.id)
+
+    if (error) {
+      setCommentError(t('comment_delete_failed'))
+      return
+    }
+
+    setCommentsByFace((prev) => ({
+      ...prev,
+      [currentPerson.id]: (prev[currentPerson.id] ?? []).filter((comment) => comment.id !== commentId),
+    }))
   }
 
   const syncLabel = !hasSupabaseConfig
@@ -1277,11 +1307,10 @@ function App() {
             </>
           )}
 
-          <section className="summary">
-            <h3>{t('comment_title')}</h3>
-            {currentPerson ? (
-              <>
-                <p className="comment-target">{t('comment_for', { name: currentPerson.name })}</p>
+          {currentPerson && (
+            <section className="summary">
+              <h3>{t('comment_title')}</h3>
+              {session ? (
                 <form className="comment-form" onSubmit={handleCommentSubmit}>
                   <textarea
                     value={commentText}
@@ -1296,26 +1325,33 @@ function App() {
                     </button>
                   </div>
                 </form>
+              ) : (
+                <p className="comment-empty">{t('comment_login_required')}</p>
+              )}
 
-                {currentComments.length === 0 ? (
-                  <p className="comment-empty">{t('comment_empty')}</p>
-                ) : (
-                  <ul className="comment-list">
-                    {currentComments.slice(0, 10).map((comment) => (
-                      <li key={comment.id} className="comment-item">
-                        <p>{comment.content}</p>
+              {currentComments.length === 0 ? (
+                <p className="comment-empty">{t('comment_empty')}</p>
+              ) : (
+                <ul className="comment-list">
+                  {currentComments.slice(0, 10).map((comment) => (
+                    <li key={comment.id} className="comment-item">
+                      <div className="comment-item-head">
                         <time dateTime={comment.created_at}>{new Date(comment.created_at).toLocaleString(locale)}</time>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </>
-            ) : (
-              <p className="comment-empty">{t('comment_unavailable')}</p>
-            )}
-            {commentError && <p className="sync-error">{commentError}</p>}
-            {syncError && <p className="sync-error">{syncError}</p>}
-          </section>
+                        {session && comment.user_id === session.user.id && (
+                          <button type="button" className="comment-delete" onClick={() => void handleCommentDelete(comment.id)}>
+                            {t('comment_delete')}
+                          </button>
+                        )}
+                      </div>
+                      <p>{comment.content}</p>
+                    </li>
+                  ))}
+                </ul>
+              )}
+              {commentError && <p className="sync-error">{commentError}</p>}
+              {syncError && <p className="sync-error">{syncError}</p>}
+            </section>
+          )}
         </>
       )}
     </main>

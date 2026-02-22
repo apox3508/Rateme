@@ -710,12 +710,6 @@ h1 {
   color: #334155;
 }
 
-.comment-target {
-  margin-top: 0.4rem;
-  color: #475569;
-  font-size: 0.88rem;
-}
-
 .comment-form {
   margin-top: 0.55rem;
   display: grid;
@@ -786,6 +780,24 @@ h1 {
   padding: 0.58rem 0.68rem;
   border: 1px solid rgba(148, 163, 184, 0.35);
   background: rgba(255, 255, 255, 0.82);
+}
+
+.comment-item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.comment-delete {
+  border: 1px solid rgba(220, 38, 38, 0.35);
+  background: rgba(254, 242, 242, 0.9);
+  color: #991b1b;
+  border-radius: 999px;
+  padding: 0.12rem 0.46rem;
+  font-size: 0.74rem;
+  font-weight: 700;
+  cursor: pointer;
 }
 
 .comment-item p {
